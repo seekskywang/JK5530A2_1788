@@ -29,6 +29,7 @@ uint8_t Comp_flag;
 uint8_t debug_over;
 uint8_t Rtc_intflag;
 uint8_t mainswitch;
+uint8_t listswitch;
 uint8_t Irange = 0;
 uint8_t overflag = 0;
 int32_t V_CS,I_CS;

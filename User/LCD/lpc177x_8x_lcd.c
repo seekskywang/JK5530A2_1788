@@ -798,8 +798,10 @@ void WriteString_Big(uint16_t x0, uint16_t y0, const uint8_t *pcStr)
 		}
 		else if(*pcStr=='.')
 			i=10;
-		else 
+		else if(*pcStr=='-')
 			i=11;
+		else
+			i=12;
 		
 		LCD_ShowFontCN_40_55(x0+usWidth,y0,32,55,(uint8_t*)(_num)+i*32/8*55);		
 		/* ASCII码表21H的值对应区位码3区*/

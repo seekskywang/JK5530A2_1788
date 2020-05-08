@@ -170,12 +170,17 @@
 extern uint8_t Comp_flag;
 extern uint8_t Debug_over;
 extern uint8_t mainswitch;
+extern uint8_t listswitch;
 extern uint8_t Irange;
 extern uint8_t overflag;
 extern uint8_t busyflag;
 extern uint8_t ptflag;
 extern struct MODS_T g_tModS;
 extern uint8_t g_mods_timeout;
+extern uint16_t listcol[6];
+extern uint16_t listrow[6];
+extern uint16_t listNo;	
+extern uint32_t startdelay;
 //数值框属性定义
 //typedef struct
 //{
@@ -328,11 +333,26 @@ typedef struct
 	Sort_TypeDef Vmvalue;
 	Sort_TypeDef Imvalue;
 	Sort_TypeDef Pvalue;
+	Sort_TypeDef LoadV;
+	Sort_TypeDef LoadC;
+	Sort_TypeDef PowV;
+	Sort_TypeDef PowC;
+	Sort_TypeDef RValue;
+	Sort_TypeDef OCValue;
+	Sort_TypeDef ShortT;
+	Sort_TypeDef LOADCAP[16];
+	Sort_TypeDef POWCAP[16];
+	Sort_TypeDef RES1[15];//结果1
+	Sort_TypeDef RES2[15];//结果2
+//	Sort_TypeDef OCRES[15];
+//	Sort_TypeDef SHORTRES[15];
+	Sort_TypeDef liststep;
 	uint8_t Rangedisp;
 	uint8_t Main_valuebuff[10];
 	uint8_t Secondvaluebuff[10];
-	uint8_t Vmvaluebuff[10];
-	uint8_t Imvaluebuff[10];
+//	uint8_t Vmvaluebuff[10];
+//	uint8_t Imvaluebuff[10];
+	
 	uint8_t Dot[4];
 	uint8_t Unit[4];
 	
@@ -406,7 +426,7 @@ typedef struct
 {
 	uint32_t Year;
 	uint32_t Mon;
-	uint32_t data;
+	uint32_t data; 	
 
 }Data_Value_Typedef;
 typedef struct
@@ -492,6 +512,7 @@ typedef struct
 	Sort_TypeDef LoadV;//设置负载电压
 	Sort_TypeDef LoadC;//设置负载电流
 	Sort_TypeDef LoadCFV;//设置负载截止电压
+	uint8_t LoadMode;//设置负载模式 
 	
 	Sort_TypeDef CTPOWV;//设置容量测试充电电压
 	Sort_TypeDef CTPOWC;//设置容量测试充电限制电流
@@ -501,16 +522,33 @@ typedef struct
 	Sort_TypeDef CutoffLV;//设置容量测试放电截止电压
 	Sort_TypeDef Loop;//循环次数
 	
+	Sort_TypeDef ListNum;//列表步数
+	uint8_t StepMode;//步进模式
+	uint8_t LoopTest;//循环测试
+	
+	
+	uint8_t ITEM[15];
+	Sort_TypeDef PARA1[15];//参数1
+	Sort_TypeDef PARA2[15];//参数2
+	Sort_TypeDef COFFV[15];//截止电压
+	Sort_TypeDef COFFC[15];//截止电流
+	
+	
+	
+	
+	
 	
     Sort_TypeDef QuickV[6];//快捷电压值
-	
-	Sort_TypeDef LoadPT;//放电保护时间
+	Sort_TypeDef LoadPT;//放电	保护时间
 	uint8_t qvflag;//快捷电压选项
-	Sort_TypeDef CALV[4];//测量电压校准
-	Sort_TypeDef CTRLV[4];//控制电压校准
-	Sort_TypeDef CALI[6];//测量电流校准
+	Sort_TypeDef CALV[7];//测量电压校准
+	Sort_TypeDef CTRLV[8];//控制电压校准
+	Sort_TypeDef CALI[9];//测量电流校准
 	uint8_t resflag;//微调分辨率
 	uint8_t jkflag;
+	
+	
+	
 }SaveSet;
 
 extern SaveSet SaveSIM;
@@ -564,6 +602,7 @@ typedef struct
 extern Send_Mainord_Typedef Send_Mainord;
 extern uint8_t usb_oenflag;
 extern uint8_t softswitch;
+
 //extern Disp_Coordinates_Typedef Disp_Coordinates;
 //==========================================================
 //系统项(2项)
@@ -625,7 +664,7 @@ extern uint8_t softswitch;
 //extern const u8 DOT_POS[6];
 
 //==========================================================
-//全局变量
+//全局变量 	
 //extern  Save_TypeDef SaveData;//保存值
 //extern  Cal_TypeDef Cal[6];//校准值
 //extern  Res_TypeDef	Res;
@@ -651,9 +690,13 @@ extern uint8_t Mode, LM_S;
 extern uint16_t I_ADC,V_ADC;
 extern uint8_t LOW_I,H_L,SWITCH_A; 
 extern float LVL_DA;
+extern uint16_t LVDISP;
+extern uint8_t ocfinish;
+extern float bc_raw;
+extern uint8_t jumpflag;
 //extern  uint16_t Voltage;//测试电压
 //extern  uint16_t Current;//测试电流
-//extern  uint16_t Resistance,xxxx;//测试电阻
+//extern  uint16_t Resistance,xxxx;//	测试电阻
 //extern  NumBox_TypeDef NumBox;//数值框
 //extern uint16_t i_buff[FIT_INUM];		   //滤波值
 //extern uint8_t ffit_data1;
@@ -662,7 +705,7 @@ extern float LVL_DA;
 //extern u8 fuhao;
 //extern bool clear_flag;
 //extern bool vol_flag;
-//extern u32 MenuIndex;//待机菜单项
+//extern u32  MenuIndex;//待机菜单项
 //extern u32 MenuSelect;//菜单选择项
 //
 //extern u32 SystemStatus;//系统状态
@@ -682,7 +725,7 @@ enum SysStatusEnum
 	SYS_STATUS_TEST ,			//内阻测试
 	SYS_STATUS_LOAD,			//程控负载测试
 	SYS_STATUS_POW,			//程控电源测试
-	SYS_STATUS_CAP,			//容量测试
+	SYS_STATUS_LIST,			//列表测试
 	SYS_STATUS_RANGE ,		//档号显示
 	SYS_STATUS_RANGECOUNT,	//档计数显示
 	SYS_STATUS_ITEM ,			//列表扫描显示
@@ -703,7 +746,6 @@ enum SlectStatusEnum
 	VL_FAIL,
 	ALL_FAIL,
 	ALL_PASS,
-	
 
 
 };

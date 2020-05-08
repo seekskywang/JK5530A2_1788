@@ -195,8 +195,11 @@ int main(void)
 			case SYS_STATUS_POW:   //程控电源显示
 				Pow_Process();
 			break;
-			case SYS_STATUS_CAP:   //容量测试显示
-
+			case SYS_STATUS_LIST:   //列表测试显示
+				List_Process();
+			break;
+			case SYS_STATUS_FACRDEBUG:	 //公司校正界面
+				Fac_DebugProcess();
 			break;
 			case SYS_STATUS_RANGE:
                 lcd_Clear(LCD_COLOR_TEST_BACK);
@@ -287,9 +290,7 @@ int main(void)
 //			case SYS_STATUS_USERDEBUG: //用户校正界面
 //				Use_DebugProcess();
 //				break;
-			case SYS_STATUS_FACRDEBUG:	 //公司校正界面
-				Fac_DebugProcess();
-				break;
+			
 			default:
 //				Disp_Clr( );//清屏
 //				Error_Process();//错误处理

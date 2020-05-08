@@ -8,6 +8,20 @@
 #define LIST2		250
 #define SELECT_1END 192
 #define SELECT_2END (410+32)
+
+#define COL1		 40
+#define COL2		 80
+#define COL3		 180
+#define COL4		 280
+#define COLW1		 40
+#define COLW2		 100
+#define ROW1		 92
+#define ROW2		 114
+#define ROW3		 136
+#define ROW4		 158
+#define ROW5		 180
+#define ROWW		 22
+
 //#define FIRSTLINE	246
 //#define	SPACE1		22
 //#define LIST1		480
@@ -34,10 +48,14 @@ extern const uint8_t Ls_Button_Tip[][7+1];
 extern const uint8_t Z_Button_Tip[][7+1];
 extern const uint8_t Y_Button_Tip[][7+1];
 extern const uint8_t R_Button_Tip[][7+1];
+extern uint8_t listcap;
 void Disp_Fastbutton(void);
 void Disp_MidRect(void);
 void Disp_TestScreen(void);
+void Disp_ListScreen(void);
 
+void ListHandle(void);
+void Disp_List_Item(void);
 void Disp_Pow_Item(void);
 void Disp_Load_Item(void);
 void Disp_Test_Item(void);//测量显示主菜单的项目显示
@@ -59,6 +77,7 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page);
 void Disp_Fastbutton(void);
 void Disp_Button_value1(uint32_t value);
 void Disp_Button_TestSet(uint32_t value);
+void  Disp_Button_List(void);
 void DispSet_value(Button_Page_Typedef* Button_Page);	//测量设置的设置参数值
 void Disp_Test_value(Button_Page_Typedef* Button_Page); // 测量显示中的设置值
 void Disp_RangeDispValue(Button_Page_Typedef *Button_Page);//档计数显示ON 或 OFF测试时档号显示界面的显示
@@ -78,7 +97,7 @@ Sort_TypeDef Input_Set_Cov(Sort_TypeDef *Input_Ref);
 void Disp_Cp(void);
 void Disp_Button_Fun_Set(uint16_t xpos,uint16_t ypos,uint8_t * Disp_Item,Button_Page_Typedef* Button_Page);
 void Disp_LimitSEt_value(Button_Page_Typedef* Button_Page);//极限设置按键值
-
+void Disp_List_Res(Button_Page_Typedef* Button_Page);
 void Disp_Correction_Set(Button_Page_Typedef* Button_Page);//校正设置
 
 void Disp_Cp_D(void);
@@ -117,6 +136,9 @@ void Disp_Range_DispSecondUnit(uint8_t num,uint8_t unit);//档号显示中Rp的单位
 void Disp_RangeTestvalue(void);    //档号显示中的Cp和Rp的值
 void Disp_RangeCount(void);
 void Disp_LIMIT_ComDispValue(Button_Page_Typedef *Button_Page);
+void Disp_List_value(Button_Page_Typedef* Button_Page);
+void Disp_Load_value(Button_Page_Typedef* Button_Page);
+void Disp_Pow_value(Button_Page_Typedef* Button_Page);
 void Disp_Scan_Compvalue(uint8_t set);
 void Disp_Scan_SetCompvalue(Button_Page_Typedef* Button_Page);
 void Disp_Button_ItemScanSet(uint32_t value);

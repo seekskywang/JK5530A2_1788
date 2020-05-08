@@ -18,14 +18,23 @@ extern u8 primcomp,scedcomp;
 uint8_t CorrectionflagC=0,CorrectionflagR=0,Correc_successflag=0;
 const uint8_t Num_1[][9]=
 {"1","2","3","4","5","6","7","8","9"};
-
+u8 listdis;
+uint8_t ocfinish;
+uint32_t LVSUM;
+uint32_t PCSUM;
+uint16_t listcol[6] = {40,80,160,240,320,400};
+uint16_t listrow[6] = {92,114,136,158,180,202};
+uint32_t listdelay;
+uint32_t startdelay;
+uint8_t listcap;
+uint8_t jumpflag;
 char CmdStr[CmdNumb][CmdLen] =
 {
 	{"<0/STATUS_?"},        //1状态      1个字符
 	{"<0/MOD_"},         //2 模式      1个字符   
 	{"<0/TRIG_"},         //// 3 开关 1个字符 
 	{"<0/SETPARA_"},           //4 内阻测试设置参数  
-	{"<0/SETL_"},         //5 程控负载设置参数
+	{"<0/SETLIST_"},         //5 程控负载设置参数
 	{"<0/SETP_?"},          //6 程控电源设置参数
 	{"<0/SETC_?"},            //7 容量测试设置参数
 	{"<0/ADCV_?"},          //8 查询ADC电压
@@ -34,8 +43,8 @@ char CmdStr[CmdNumb][CmdLen] =
 	{"<0/STATUS_?"},        //11 状态     1个字符 
 	{"<0/CALV_"},        //12 测量电压校准     1个字符
 	{"<0/CALI_"},        //13 测量电流校准     1个字符
-	{"<0/CTRLV_"},        //14 控制电压校准     1个字符
-	{"<0/CLEARI_"},        //15 电流清零校准     1个字符
+	{"<0/CALR_"},        //14 电阻校准     1个字符
+	{"<0/DAC_"},        //15 DAC   1个字符
 	{"<0/OVER_"}, 			//16 保护信号   1个字符
 	{"<0/TEMP_?"}, 			//17 查询温度   1个字符
 };
@@ -43,10 +52,10 @@ char CmdStr[CmdNumb][CmdLen] =
 char RecStr[CmdNumb][CmdLen] =
 {
 	{"STATUS_\0"},        //状态读取
-	{"RET_\0"},           //复位      1个字符   
-	{"CSV_\0"},           //读取CS1237电压的数据
-	{"MOD_\0"},           //模式切换    1个字符  
-	{"CSI_\0"},           //读取CS1237电流的数据 
+	{"MOD_\0"},           //复位      1个字符   
+	{"TRIG_\0"},           //读取CS1237电压的数据
+	{"SETPARA_\0"},           //模式切换    1个字符  
+	{"SETLIST_\0"},           //读取CS1237电流的数据 
 	{"ADCI_\0"},          //ADC电流
 	{"LM_\0"},            // 启动LM5116 1个字符 
 	{"ADCV_\0"},          //ADC电压
@@ -75,13 +84,38 @@ const uint8_t Test_Setitem_E[][9+1]=
 	
 };
 
+const uint8_t Load_Mode[][6+2]=
+{
+	" CC模式",
+	" CV模式",
+};
+
+const uint8_t Step_Mode[][6+1]=
+{
+	" 触发",
+	" 连续",
+};
+
+const uint8_t Loop_Test[][6+1]=
+{
+	" 关",
+	" 开",
+};
+
+const uint8_t List_Item[][6+1]=
+{
+	"放电",
+	"充电",
+	"过流",
+};
+
 const uint8_t Test_Setitem[][14+1]=
 {
 	{"起始电流  :"},
 	{"步进电流  :"},
 	{"门槛电压  :"},
 	{"步进时间    :"},
-	{"快捷电压    :"},
+	{"过流值      :"},
     {"放电保护时间:"},
 	
 //	{"Vm:"},
@@ -156,44 +190,75 @@ const uint8_t Pow_Setitem[][14+1]=
 	{""},
 	{""},
 	{""},
-//	{"截止电压    :"},
-//	{"            "},
-//    {"            "},
 	
-//	{"Vm:"},
-//	{"Im:"},
-//	{"校正:"}
+};
+
+const uint8_t List_Setitem[][14+1]=
+{
+	{"列表步数  :"},
+	{"步进模式  :"},
+	{""},
+	{"循环测试  :"},
+	{""},
+	{""},
+	
+};
+
+const uint8_t List_Setitem_E[][14+1]=
+{
+	{"List Steps :"},
+	{"Step Mode  :"},
+	{"  :"},
+	{"Loop Test  :"},
+	{""},
+	{""},
 	
 };
 const uint8_t Fac_Calitem[][14+1]=
 {
-	{"1V    "},
-	{"10V   "},
-	{"13V   "},
-	{"18V   "},	
-	{"19V   "},
-	{"19.5V "}
+	{"LVL1  "},
+	{"LVL2  "},
+	{"LVH1  "},
+	{"LVH2  "},	
+	{"PV1   "},
+	{"PV2   "},
+	{"PV3   "}
 };
 
 const uint8_t Fac_ICalitem[][14+1]=
 {	
-	{"10mA  "},
-	{"5A    "},
-	{"10A   "},
-	{"-10mA "},
-	{"-5A   "},
-	{"-10A  "},
+	{"IRL1  "},
+	{"IRL2  "},
+	{"IRH1  "},
+	{"IRH2  "},
+	{"R1L   "},
+	{"R1H   "},
+	{"R2L	"},
+	{"R2H   "}
 };
 
 const uint8_t CtrV_Calitem[][14+1]=
 {
-	{"1V    "},
-	{"10V   "},
-	{"15V   "},
-	{"19V   "},
-	{"      "},
-	{"      "}
+	{"LL1   "},
+	{"LL2   "},
+	{"LL3   "},
+	{"LH1   "},
+	{"LH2   "},
+	{"LH3   "},
+	{"PC1   "},
+	{"PC2   "},
+	{"PC3   "}
 };
+const uint8_t PowI_Calitem[][14+1]=
+{
+	{"PL1   "},
+	{"PL2   "},
+	{"PL3   "},
+	{"PH1   "},
+	{"PH2   "},
+	{"PH3   "}
+};
+
 
 const uint8_t Button_TipPage1[][7+1]=  //测试参数选择时候的下面的提示符号
 {
@@ -436,6 +501,8 @@ const uint8_t Setup_Beep[][6+1]=
 	"不合格",
 
 };
+
+
 const uint8_t *Setup_Valueall[]=
 {
 	*User_FUNC,
@@ -515,7 +582,7 @@ const uint8_t User_Comp[][10+1]=
 {
     
     {"OFF"},
-	{"ON"},
+	{"ON "},
    
 };
 const uint8_t Limit_Scan_Fun[][4+1]=
@@ -912,7 +979,7 @@ const uint8_t All_TopName[][21+1]=
 	{"< 内阻测试 >"},
 	{"< 程控负载 >"},
 	{"< 程控电源 >"},
-	{"< 容量测试   >"},
+	{"< 列表测试   >"},
 	{"< 测量设置 >"},
 	{"< 用户校正 >"},
 	{"< 极限列表设置 >"},
@@ -927,7 +994,7 @@ const uint8_t All_TopName_E[][21+1]=
 	{"< I.R TEST     >"},
 	{"< POWER		 >"},
 	{"< LOAD         >"},
-	{"< CAPACITY     >"},
+	{"< LIST         >"},
 	{"< MEASURE SETUP >"},
 	{"< CORRECTION >"},
 	{"< LIMIT TABLE SETUP >"},
@@ -1203,6 +1270,14 @@ const uint8_t Correction_Resist[][7+1]=			//校正电阻
 	{"100KΩ"},
 };
 
+void ListDataSet(u8 step)
+{
+	if(SaveSIM.ITEM[step] == 0)
+	{
+		
+	}
+}
+
 //显示 下面的快捷键按键
 void Disp_Fastbutton(void)
 {
@@ -1352,7 +1427,7 @@ void  Disp_Button_Test(void)
 		WriteString_16(83, 271-29, "内阻测试",  0);
 		WriteString_16(83+80,271-29, "程控负载",  0);
 		WriteString_16(83+160,271-29, "程控电源",  0);
-		WriteString_16(83+240,271-29, "容量测试",  0);
+		WriteString_16(83+240,271-29, "列表测试",  0);
 //		WriteString_16(92+80+80,271-29, "档计数",  0);
 	}
 	//	WriteString_16(83, 271-29, "测量设置",  0);
@@ -1364,7 +1439,124 @@ void  Disp_Button_Test(void)
 
 }
 
+void  Disp_Button_List(void)
+{
+		Disp_Fastbutton();
+		Colour.Fword=White;
+		Colour.black=LCD_COLOR_TEST_BUTON;
+	if(SaveData.Sys_Setup.Language == 1)
+	{
+//		WriteString_16(83, 271-29, "I.R TEST",  0);
+		WriteString_16(83+80,271-29, "NEXT",  0);
+		WriteString_16(83+160,271-29, "RESULT",  0);
+		WriteString_16(83+240,271-29, "BACK",  0);
+//		WriteString_16(92+320,271-29, "START ",  0);
+	}else if(SaveData.Sys_Setup.Language == 0){
+//		WriteString_16(83, 271-29, "内阻测试",  0);
+		WriteString_16(83+80,271-29, "下一步",  0);
+		WriteString_16(83+160,271-29, "测试结果",  0);
+		WriteString_16(92+240,271-29, " 返回",  0);
+//		WriteString_16(92+320,271-29, " 启动",  0);
+	}
+	//	WriteString_16(83, 271-29, "测量设置",  0);
+	  
+	//	WriteString_16(83+80,271-29, "档号显示",  0);
+	  
+	//	WriteString_16(92+80+80,271-29, "档计数",  0);
+	
 
+}
+
+
+void Disp_List_Sheet(u8 num)
+{
+	u8 i;
+	LCD_DrawRect(0,92,480,202,LCD_COLOR_TEST_MID);
+	LCD_DrawLine( 0, 70, 0, 202-(5-num)*22, White );
+	LCD_DrawLine( 40, 70, 40, 202-(5-num)*22 , White );
+	LCD_DrawLine( 40+40, 70, 40+40, 202-(5-num)*22 , White );
+	for(i=1;i<5;i++)
+	{
+		LCD_DrawLine( 40+40+80*i, 70, 40+40+80*i, 202-(5-num)*22 , White );
+	}
+	
+//	if(SaveSIM.ListNum.Num > 5)
+//	{
+//		for(i=0;i<7;i++)
+//		{
+//			LCD_DrawLine( 0, 70+22*i, 480, 70+22*i, White );
+//			
+//		}。
+//	}else{
+		for(i=0;i<num+2;i++)
+		{
+			LCD_DrawLine( 0, 70+22*i, 480, 70+22*i, White );
+		}
+//	}
+	Colour.black=LCD_COLOR_TEST_MID;
+	if(SaveData.Sys_Setup.Language == 1)
+	{
+		WriteString_16(3,73,  "NO",  0);
+		WriteString_16(3+40,73,  "MODE",  0);
+		WriteString_16(3+40+40,73,  "PARA1",  0);
+		WriteString_16(3+40+40+100-20,73,  "PARA2",  0);
+		WriteString_16(3+40+40+100+100-40,73,  "COFFV",  0);
+		WriteString_16(3+40+40+100+100+100-60,73,  "COFFC",  0);
+		WriteString_16(3+40+40+100+100+100+100-80,73,  "TIME",  0);
+	}else if(SaveData.Sys_Setup.Language == 0){
+		WriteString_16(3,73,  "序号",  0);
+		WriteString_16(3+40,73,  "项目",  0);
+		WriteString_16(3+40+40,73,  "参数1",  0);
+		WriteString_16(3+40+40+100-20,73,  "参数2",  0);
+		WriteString_16(3+40+40+100+100-40,73,  "截止电压",  0);
+		WriteString_16(3+40+40+100+100+100-60,73,  "截止电流",  0);
+		WriteString_16(3+40+40+100+100+100+100-80,73,  "时间",  0);
+	}
+}
+
+void Disp_Res_Sheet(u8 num)
+{
+	u8 i;
+	LCD_DrawRect(0,92,480,202,LCD_COLOR_TEST_MID);
+	LCD_DrawLine( 0, 70, 0, 202-(5-num)*22, White );
+	LCD_DrawLine( 40, 70, 40, 202-(5-num)*22 , White );
+	LCD_DrawLine( 40+40, 70, 40+40, 202-(5-num)*22 , White );
+	for(i=1;i<4;i++)
+	{
+		LCD_DrawLine( 40+40+100*i, 70, 40+40+100*i, 202-(5-num)*22 , White );
+	}
+	
+//	if(SaveSIM.ListNum.Num > 5)
+//	{
+//		for(i=0;i<7;i++)
+//		{
+//			LCD_DrawLine( 0, 70+22*i, 480, 70+22*i, White );
+//			
+//		}。
+//	}else{
+		for(i=0;i<num+2;i++)
+		{
+			LCD_DrawLine( 0, 70+22*i, 480, 70+22*i, White );
+		}
+//	}
+	Colour.black=LCD_COLOR_TEST_MID;
+	if(SaveData.Sys_Setup.Language == 1)
+	{
+		WriteString_16(3,73,  "NO",  0);
+		WriteString_16(3+40,73,  "MODE",  0);
+		WriteString_16(3+40+40,73,  "PARA1",  0);
+		WriteString_16(3+40+40+100,73,  "PARA2",  0);
+		WriteString_16(3+40+40+100+100,73,  "RES1",  0);
+		WriteString_16(3+40+40+100+100+100,73,  "RES2",  0);
+	}else if(SaveData.Sys_Setup.Language == 0){
+		WriteString_16(3,73,  "序号",  0);
+		WriteString_16(3+40,73,  "项目",  0);
+		WriteString_16(3+40+40,73,  "参数1",  0);
+		WriteString_16(3+40+40+100,73,  "参数2",  0);
+		WriteString_16(3+40+40+100+100,73,  "结果1   ",  0);
+		WriteString_16(3+40+40+100+100+100,73,  "结果2   ",  0);
+	}
+}
 
 void Disp_Button_value1(uint32_t value)
 {
@@ -1657,8 +1849,8 @@ void Disp_Button_TestSet(uint32_t value)
 			
 		}else if(SaveData.Sys_Setup.Language == 0){
 			WriteString_16(83, 271-29, "电压校正",  0);
-			WriteString_16(83+80, 271-29, "控制校正",  0);
-			WriteString_16(83+80+80, 271-29, "电流校正",  0);
+			WriteString_16(83+80, 271-29, "电流校正",  0);
+			WriteString_16(83+80+80, 271-29, "电阻校正",  0);
 //			WriteString_16(83+80+80+80, 271-29, "清除校正",  0); 
 		}
      
@@ -1739,6 +1931,15 @@ void Disp_TestScreen(void)
 	Disp_Fastbutton();//显示快速按键
 	Disp_MidRect();//显示中间色块
 }
+
+void Disp_ListScreen(void)
+{
+//	Disp_TopBar_Color();
+	LCD_DrawRect(0, 0, 160,22 , LCD_COLOR_TEST_BAR);
+	Disp_Fastbutton();//显示快速按键
+	LCD_DrawRect(0,70,479 ,205 , LCD_COLOR_TEST_MID ) ;
+}
+
 //
 //测量显示主菜单的项目显示
 //
@@ -1829,13 +2030,15 @@ void Disp_Load_Item(void)
 
 		
 	}
+	Colour.black=LCD_COLOR_TEST_MID;
+	WriteString_16(442,186,"mAH",0);
 //	LCD_DrawRect(0,26+2*22,479,16,LCD_COLOR_TEST_BACK);
 	Disp_Button_Test();
-	
+		
 
 }
 
-//程控负载主菜单的项目显示
+//程控电源主菜单的项目显示
 //
 void Disp_Pow_Item(void)
 {
@@ -1845,15 +2048,15 @@ void Disp_Pow_Item(void)
 	Colour.black=LCD_COLOR_TEST_BAR;
 	if(SaveData.Sys_Setup.Language == 1)
 	{
-		WriteString_16(0,4, All_TopName_E[1],  0);
+		WriteString_16(0,4, All_TopName_E[2],  0);
 		
 	}else if(SaveData.Sys_Setup.Language == 0){
-		WriteString_16(0,4, All_TopName[1],  0);
+		WriteString_16(0,4, All_TopName[2],  0);
 	}
 	
 	Colour.Fword=White;
 	Colour.black=LCD_COLOR_TEST_BACK;
-	for(i=0;i<6;i++)
+	for(i=0;i<3;i++)
 	{
 		if(i<3)
 		{
@@ -1865,12 +2068,62 @@ void Disp_Pow_Item(void)
 				WriteString_16(0, 26+i*22, Pow_Setitem[i],  0);
 			}
 		}else{
+//			if(SaveData.Sys_Setup.Language == 1)
+//			{
+//				WriteString_16(250,26+(i-3)*22, Pow_Setitem_E[i],  0);
+//				
+//			}else if(SaveData.Sys_Setup.Language == 0){
+//				WriteString_16(250,26+(i-3)*22, Pow_Setitem[i],  0);
+//			}
+			
+		}
+
+		
+	}
+	Colour.black=LCD_COLOR_TEST_MID;
+	WriteString_16(442,186,"mAH",0);
+//	LCD_DrawRect(0,26+2*22,479,16,LCD_COLOR_TEST_BACK);
+	Disp_Button_Test();
+	
+
+}
+
+//列表测试主菜单的项目显示
+//
+void Disp_List_Item(void)
+{
+	uint32_t i;
+	Disp_ListScreen();
+	Colour.Fword=White;
+	Colour.black=LCD_COLOR_TEST_BAR;
+	if(SaveData.Sys_Setup.Language == 1)
+	{
+		WriteString_16(0,4, All_TopName_E[3],  0);
+		
+	}else if(SaveData.Sys_Setup.Language == 0){
+		WriteString_16(0,4, All_TopName[3],  0);
+	}
+	
+	Colour.Fword=White;
+	Colour.black=LCD_COLOR_TEST_BACK;
+	for(i=0;i<6;i++)
+	{
+		if(i<3)
+		{
 			if(SaveData.Sys_Setup.Language == 1)
 			{
-				WriteString_16(250,26+(i-3)*22, Pow_Setitem_E[i],  0);
+				WriteString_16(0, 26+i*22, List_Setitem_E[i],  0);
 				
 			}else if(SaveData.Sys_Setup.Language == 0){
-				WriteString_16(250,26+(i-3)*22, Pow_Setitem[i],  0);
+				WriteString_16(0, 26+i*22, List_Setitem[i],  0);
+			}
+		}else{
+			if(SaveData.Sys_Setup.Language == 1)
+			{
+				WriteString_16(250,26+(i-3)*22, List_Setitem_E[i],  0);
+				
+			}else if(SaveData.Sys_Setup.Language == 0){
+				WriteString_16(250,26+(i-3)*22, List_Setitem[i],  0);
 			}
 			
 		}
@@ -1879,9 +2132,9 @@ void Disp_Pow_Item(void)
 	}
 //	LCD_DrawRect(0,26+2*22,479,16,LCD_COLOR_TEST_BACK);
 	Disp_Button_Test();
-	
 
 }
+
 //档号显示子函数
 void Disp_Range_MidRect(void)
 {
@@ -2819,7 +3072,7 @@ void Disp_Test_value(Button_Page_Typedef* Button_Page)
 	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
 	WriteString_16(LIST1+88+16+70, FIRSTLINE+SPACE1*2, "V",  1);
 	
-	//充电保护时间
+	//步进时间
 	Black_Select=(Button_Page->index==4)?1:0;
 	if(Black_Select)
 	{
@@ -2835,7 +3088,7 @@ void Disp_Test_value(Button_Page_Typedef* Button_Page)
 	WriteString_16(LIST2+88+32,FIRSTLINE, DispBuf,  0);//增加算法  把顺序改过来
 	WriteString_16(LIST2+88+32+60, FIRSTLINE, "ms",  1);
 	
-	//快捷电压
+	//过流值
 	Black_Select=(Button_Page->index==5)?1:0;
 	if(Black_Select)
 	{
@@ -2846,10 +3099,7 @@ void Disp_Test_value(Button_Page_Typedef* Button_Page)
 	{
 		Colour.black=LCD_COLOR_TEST_BACK;
 	}
-	Hex_Format(SaveSIM.QuickV[SaveSIM.qvflag].Num,3,5,0);
-	LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+8 , FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
-	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
-	WriteString_16(LIST2+88+32+70, FIRSTLINE+SPACE1, "V",  1);
+	
 	
 
 //	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, User_Speed[SaveData.Main_Func.Speed],  1);
@@ -2865,10 +3115,7 @@ void Disp_Test_value(Button_Page_Typedef* Button_Page)
 	{
 		Colour.black=LCD_COLOR_TEST_BACK;
 	}
-	Hex_Format(SaveSIM.LoadPT.Num,0,3,0);		
-	LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1*2-2,SELECT_2END+9,FIRSTLINE+SPACE1*3-4, Colour.black ) ;//SPACE1
-	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
-	WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1*2, "ms",  1);
+	
 //	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, User_Speed[SaveData.Main_Func.Speed],  1);
 //偏置
 //	if(index==12)
@@ -2952,6 +3199,627 @@ void Disp_Test_value(Button_Page_Typedef* Button_Page)
 	}
 
 }
+
+
+//负载模式设置值
+void Disp_Load_value(Button_Page_Typedef* Button_Page)
+{
+//	uint32_t flag;
+	uint32_t i;
+//	uint32_t xpose;
+	uint32_t Black_Select;
+//	uint32_t Select_color;
+	if(SaveData.Main_Func.V_i==1) 
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+		WriteString_16(30,210, User_Comp[1],  1);
+		WriteString_16(30+120, 210, User_Comp[1],  1);
+		
+	}
+//负载模式
+	Black_Select=(Button_Page->index==1)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	//if()
+	
+	LCD_DrawRect( LIST1+87+16,FIRSTLINE-2,SELECT_1END ,FIRSTLINE+SPACE1-4 , Colour.black ) ;//SPACE1
+	WriteString_16(LIST1+88+16,FIRSTLINE, Load_Mode[SaveSIM.LoadMode],  0);//增加算法  把顺序改过来
+	
+//	WriteString_16(LIST2-88, SCREENHIGH-FIRSTLINE, User_Range[SaveData.Main_Func.Range.Range],  0);
+//负载电流	
+	Black_Select=(Button_Page->index==2)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.LoadC.Num,3,5,0);	
+	LCD_DrawRect(LIST1+87+16, FIRSTLINE+SPACE1-2,SELECT_1END ,FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
+	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(LIST1+88+16+70, FIRSTLINE+SPACE1, "A",  1);
+	
+	
+////门槛电压	
+//	Black_Select=(Button_Page->index==3)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//	Hex_Format(SaveSIM.ThresholdV.Num,3,5,0);		
+//	LCD_DrawRect(LIST1+87+16, FIRSTLINE+SPACE1*2-2,SELECT_1END ,FIRSTLINE+SPACE1*3 -4, Colour.black ) ;//SPACE1
+//	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
+//	WriteString_16(LIST1+88+16+70, FIRSTLINE+SPACE1*2, "V",  1);
+	
+	//负载电压
+	Black_Select=(Button_Page->index==4)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.LoadV.Num,3,5,0);	
+	LCD_DrawRect( LIST2+87+32, FIRSTLINE-2,SELECT_2END+9,FIRSTLINE+SPACE1-4, Colour.black ) ;//SPACE1
+	WriteString_16(LIST2+88+32,FIRSTLINE, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(LIST2+88+32+60, FIRSTLINE, "V",  1);
+	
+	//截止电压
+	Black_Select=(Button_Page->index==5)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.LoadCFV.Num,3,5,0);
+	LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+9 , FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
+	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1, "V",  1);
+	
+
+//	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, User_Speed[SaveData.Main_Func.Speed],  1);
+	
+
+//	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, User_Speed[SaveData.Main_Func.Speed],  1);
+//偏置
+//	if(index==12)
+//		index=13;
+//	Black_Select=(Button_Page->index==6)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//		
+//	LCD_DrawRect( LIST2+87,FIRSTLINE+SPACE1*2-2,SELECT_2END ,FIRSTLINE+SPACE1*3-4 , Colour.black ) ;//SPACE1
+//	WriteString_16(LIST2+88,FIRSTLINE+SPACE1*2, User_Comp[1],  1);//SaveData.Main_Func.Bias
+	Disp_Fastbutton();
+	
+	switch(Button_Page->index)
+	{
+		case 0:
+			Disp_Button_Test();
+			//	Disp_Button_value1(Button_Page->page);
+			break;
+		case 1:				//显示功能项的按键值
+//			Colour.Fword=White;
+//			Colour.black=LCD_COLOR_TEST_BUTON;
+//			WriteString_16(BUTTOM_X_VALUE+4, BUTTOM_Y_VALUE,Set_V_Res[SaveSIM.resflag],  0);
+//			for(i=1;i<3;i++)
+//			{
+//				WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,Tune_V[i-1],  0);
+//			}
+		break;
+		case 2:
+
+		break;
+		case 3:
+			break;
+
+		case 4:
+//			Colour.Fword=White;
+//			Colour.black=LCD_COLOR_TEST_BUTON;
+//			if(Button_Page->page == 0)
+//			{
+//				for(i=0;i<3;i++)
+//				{
+//					Hex_Format(SaveSIM.QuickV[i+(Button_Page->page)*3].Num,3,5,0);
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,DispBuf,  0);
+//				}
+//				WriteString_16(BUTTOM_X_VALUE+3*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,"NEXT",  0);
+//			}else if(Button_Page->page == 1){
+//				for(i=0;i<3;i++)
+//				{
+//					Hex_Format(SaveSIM.QuickV[i+(Button_Page->page)*3].Num,3,5,0);
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,DispBuf,  0);
+//				}
+//				WriteString_16(BUTTOM_X_VALUE+3*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,"PREV",  0);
+//			}
+			
+
+			break;
+		case 5:
+
+			break;
+//		case 6:
+//			Colour.Fword=White;
+//			Colour.black=LCD_COLOR_TEST_BUTON;
+//			for(i=0;i<2;i++)
+//			{
+//				if(i==0)
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+20, BUTTOM_Y_VALUE, User_Comp[i],  0);
+//				else 
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+25, BUTTOM_Y_VALUE, User_Comp[i],  0);
+//			}
+//			break;
+		default:
+			
+		break;
+			
+	}
+
+}
+
+void Disp_List_Res(Button_Page_Typedef* Button_Page)
+{
+		uint32_t i;
+		if(SaveSIM.ListNum.Num/5+5 > Button_Page->page)
+		{
+			listdis = 30;
+		}else{
+			listdis = 5+SaveSIM.ListNum.Num%5*5;
+		}
+		
+		Disp_Res_Sheet((listdis-5)/5);
+		
+		for(i=0;i<(listdis-5)/5;i++)
+		{
+			Colour.black=LCD_COLOR_TEST_MID;
+	//		LCD_DrawRect(3, 95+22*i,35 ,95+22*i+32 , Colour.black ) ;
+			Hex_Format(i+1+(Button_Page->page-5)*5,0,2,0);
+			WriteString_16(3,95+22*i, DispBuf, 1);
+		}
+		
+	//列表项目
+		for(i=5;i<listdis;i++)
+		{
+			
+			LCD_DrawRect(listcol[i%5]+1, listrow[i/5-1]+1,listcol[i%5+1]-1 ,listrow[i/5]-1 , Colour.black );
+			if(i%5==0)
+			{		
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, List_Item[SaveSIM.ITEM[(i-5)/5 + (Button_Page->page -5)*5]],  0);
+				
+			}else if(i%5==1)
+			{
+				Hex_Format(SaveSIM.PARA1[(i-5)/5 + (Button_Page->page -5)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
+//				WriteString_16(listcol[i%5]+3+80,listrow[i/5-1]+3, "V",  0);			
+			}else if(i%5==2)
+			{
+				Hex_Format(SaveSIM.PARA2[(i-5)/5 + (Button_Page->page -5)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
+//				WriteString_16(listcol[i%5]+3+80,listrow[i/5-1]+3, "A",  0);			
+			}else if(i%5==3)
+			{
+				Hex_Format(Test_Dispvalue.RES1[(i-5)/5 + (Button_Page->page -5)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
+//				WriteString_16(listcol[i%5]+3+80,listrow[i/5-1]+3, "V",  0);
+			}else if(i%5==4)
+			{
+				Hex_Format(Test_Dispvalue.RES2[(i-5)/5 + (Button_Page->page -5)*5].Num,0,6,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);	
+//				WriteString_16(listcol[i%5]+3+80,listrow[i/5-1]+3, "A",  0);
+			}
+			
+			
+		}
+}
+
+//列表模式设置值
+void Disp_List_value(Button_Page_Typedef* Button_Page)
+{
+//	uint32_t flag;
+	uint32_t i;
+//	uint32_t xpose;
+	uint32_t Black_Select;
+	
+//	uint32_t Select_color;
+//列表步数
+	Black_Select=(Button_Page->index==1)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.ListNum.Num,0,3,0);	
+	LCD_DrawRect( LIST1+87+16, FIRSTLINE-2,SELECT_1END+9,FIRSTLINE+SPACE1-4, Colour.black ) ;//SPACE1
+	WriteString_16(LIST1+88+16,FIRSTLINE, DispBuf,  0);//增加算法  把顺序改过来
+//	WriteString_16(LIST2+88+16, FIRSTLINE, "ms",  1);
+	
+//	LCD_DrawRect( LIST1+87+16,FIRSTLINE-2,SELECT_1END ,FIRSTLINE+SPACE1-4 , Colour.black ) ;//SPACE1
+//	WriteString_16(LIST1+88+16,FIRSTLINE, Load_Mode[SaveSIM.LoadMode],  0);//增加算法  把顺序改过来
+	
+//	WriteString_16(LIST2-88, SCREENHIGH-FIRSTLINE, User_Range[SaveData.Main_Func.Range.Range],  0);
+	
+	
+//步进模式
+	Black_Select=(Button_Page->index==2)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	LCD_DrawRect(LIST1+87+16, FIRSTLINE+SPACE1-2,SELECT_1END ,FIRSTLINE+SPACE1*2-4 , Colour.black ) ;
+	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1, Step_Mode[SaveSIM.StepMode],  0);
+	
+
+	
+	
+	//	循环测试
+	Black_Select=(Button_Page->index==3)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	
+	LCD_DrawRect(LIST2+87+32, FIRSTLINE-2,SELECT_2END ,FIRSTLINE+SPACE1-4 , Colour.black ) ;
+	WriteString_16(LIST2+87+32,FIRSTLINE, Loop_Test[SaveSIM.LoopTest],  0);
+	
+	
+	
+	if(SaveSIM.ListNum.Num/5+1 > Button_Page->page)
+	{
+		listdis = 35;
+	}else{
+		listdis = 6+SaveSIM.ListNum.Num%5*6;
+	}
+	
+	Disp_List_Sheet((listdis-5)/5);
+	
+	for(i=0;i<(listdis-5)/5;i++)
+	{
+		Colour.black=LCD_COLOR_TEST_MID;
+//		LCD_DrawRect(3, 95+22*i,35 ,95+22*i+32 , Colour.black ) ;
+		Hex_Format(i+1+(Button_Page->page-1)*5,0,2,0);
+		WriteString_16(3,95+22*i, DispBuf, 1);
+	}
+	
+	if(Button_Page -> page == 1)
+	{
+		//列表项目
+		for(i=5;i<listdis;i++)
+		{
+			Black_Select=(Button_Page->index==i)?1:0;
+			if(Black_Select)
+			{
+				Colour.black=LCD_COLOR_SELECT;	
+			}
+			else
+			{
+				Colour.black=LCD_COLOR_TEST_MID;
+			}
+			LCD_DrawRect(listcol[i%5]+1, listrow[i/5-1]+1,listcol[i%5+1]-1 ,listrow[i/5]-1 , Colour.black );
+			if(i%5==0)
+			{		
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, List_Item[SaveSIM.ITEM[(i-5)/5 + (Button_Page->page -1)*5]],  0);
+				
+			}else if(i%5==1)
+			{
+				Hex_Format(SaveSIM.PARA1[(i-5)/5 + (Button_Page->page -1)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
+				WriteString_16(listcol[i%5]+3+60,listrow[i/5-1]+3, "V",  0);			
+			}else if(i%5==2)
+			{
+				Hex_Format(SaveSIM.PARA2[(i-5)/5 + (Button_Page->page -1)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
+				WriteString_16(listcol[i%5]+3+60,listrow[i/5-1]+3, "A",  0);			
+			}else if(i%5==3)
+			{
+				Hex_Format(SaveSIM.COFFV[(i-5)/5 + (Button_Page->page -1)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
+				WriteString_16(listcol[i%5]+3+60,listrow[i/5-1]+3, "V",  0);
+			}else if(i%5==4)
+			{
+				Hex_Format(SaveSIM.COFFC[(i-5)/5 + (Button_Page->page -1)*5].Num,3,5,0);
+				WriteString_16(listcol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);	
+				WriteString_16(listcol[i%5]+3+60,listrow[i/5-1]+3, "A",  0);
+			}
+			
+			
+		}
+	}
+	
+	
+	
+	Disp_Fastbutton();
+	
+	if(Button_Page->index < 5)
+	{
+		switch(Button_Page->index)
+		{
+				case 0:
+					Colour.Fword=White;
+					Colour.black=LCD_COLOR_TEST_BUTON;
+					Disp_Button_Test();
+				break;
+				case 1:				//显示功能项的按键值
+			
+				break;
+				case 2:
+					Colour.Fword=White;
+					Colour.black=LCD_COLOR_TEST_BUTON;
+					for(i=0;i<2;i++)
+					{
+						WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,Step_Mode[i],  0);
+					}
+				break;
+				case 3:
+					Colour.Fword=White;
+					Colour.black=LCD_COLOR_TEST_BUTON;
+					for(i=0;i<2;i++)
+					{
+						WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,Loop_Test[i],  0);
+					}
+				break;
+				default:
+			
+				break;
+		}
+		WriteString_16(BUTTOM_X_VALUE+4*BUTTOM_MID_VALUE, 271-29,"进入测试",  0);
+	}else{
+		switch(Button_Page->index%5)
+		{
+			case 0:
+				if(Button_Page->index < 5)
+				{
+					Disp_Button_Test();
+				}else{
+					Colour.Fword=White;
+					Colour.black=LCD_COLOR_TEST_BUTON;
+					for(i=0;i<3;i++)
+					{
+						WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,List_Item[i],  0);
+					}
+					WriteString_16(BUTTOM_X_VALUE+4*BUTTOM_MID_VALUE, 271-29,"进入测试",  0);
+				}
+				//	Disp_Button_value1(Button_Page->page);
+				break;
+			default:
+				Colour.Fword=White;
+				Colour.black=LCD_COLOR_TEST_BUTON;
+				WriteString_16(BUTTOM_X_VALUE+4*BUTTOM_MID_VALUE, 271-29,"进入测试",  0);
+				break;
+		}
+	}
+	
+
+}
+
+//电源模式设置值
+void Disp_Pow_value(Button_Page_Typedef* Button_Page)
+{
+//	uint32_t flag;
+	uint32_t i;
+//	uint32_t xpose;
+	uint32_t Black_Select;
+//	uint32_t Select_color;
+	if(SaveData.Main_Func.V_i==1) 
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+		WriteString_16(30,210, User_Comp[1],  1);
+		WriteString_16(30+120, 210, User_Comp[1],  1);
+		
+	}
+//电源电压
+	Black_Select=(Button_Page->index==1)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.PowV.Num,3,5,0);	
+	LCD_DrawRect(LIST1+87+16, FIRSTLINE-2,SELECT_1END ,FIRSTLINE+SPACE1*1-4 , Colour.black ) ;//SPACE1
+	WriteString_16(LIST1+88+16,FIRSTLINE, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(LIST1+88+16+70, FIRSTLINE, "V",  1);
+	
+//	WriteString_16(LIST2-88, SCREENHIGH-FIRSTLINE, User_Range[SaveData.Main_Func.Range.Range],  0);
+//限制电流	
+	Black_Select=(Button_Page->index==2)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.PowC.Num,3,5,0);	
+	LCD_DrawRect(LIST1+87+16, FIRSTLINE+SPACE1-2,SELECT_1END ,FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
+	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(LIST1+88+16+70, FIRSTLINE+SPACE1, "A",  1);
+	
+	
+////门槛电压	
+//	Black_Select=(Button_Page->index==3)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//	Hex_Format(SaveSIM.ThresholdV.Num,3,5,0);		
+//	LCD_DrawRect(LIST1+87+16, FIRSTLINE+SPACE1*2-2,SELECT_1END ,FIRSTLINE+SPACE1*3 -4, Colour.black ) ;//SPACE1
+//	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
+//	WriteString_16(LIST1+88+16+70, FIRSTLINE+SPACE1*2, "V",  1);
+	
+	//充电截止电流
+	Black_Select=(Button_Page->index==3)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
+	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.PowCFC.Num,3,5,0);	
+	LCD_DrawRect(LIST1+87+16, FIRSTLINE+SPACE1*2-2,SELECT_1END ,FIRSTLINE+SPACE1*3 -4, Colour.black ) ;//SPACE1
+	WriteString_16(LIST1+88+16,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(LIST1+88+16+70, FIRSTLINE+SPACE1*2, "A",  1);
+	
+//	//截止电压
+//	Black_Select=(Button_Page->index==5)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//	Hex_Format(SaveSIM.LoadCFV.Num,3,5,0);
+//	LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+8 , FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
+//	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
+//	WriteString_16(LIST2+88+32+70, FIRSTLINE+SPACE1, "V",  1);
+	
+
+//	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, User_Speed[SaveData.Main_Func.Speed],  1);
+	
+
+//	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, User_Speed[SaveData.Main_Func.Speed],  1);
+//偏置
+//	if(index==12)
+//		index=13;
+//	Black_Select=(Button_Page->index==6)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//		
+//	LCD_DrawRect( LIST2+87,FIRSTLINE+SPACE1*2-2,SELECT_2END ,FIRSTLINE+SPACE1*3-4 , Colour.black ) ;//SPACE1
+//	WriteString_16(LIST2+88,FIRSTLINE+SPACE1*2, User_Comp[1],  1);//SaveData.Main_Func.Bias
+	Disp_Fastbutton();
+	
+	switch(Button_Page->index)
+	{
+		case 0:
+			Disp_Button_Test();
+			//	Disp_Button_value1(Button_Page->page);
+			break;
+		case 1:				//显示功能项的按键值
+//			Colour.Fword=White;
+//			Colour.black=LCD_COLOR_TEST_BUTON;
+//			WriteString_16(BUTTOM_X_VALUE+4, BUTTOM_Y_VALUE,Set_V_Res[SaveSIM.resflag],  0);
+//			for(i=1;i<3;i++)
+//			{
+//				WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,Tune_V[i-1],  0);
+//			}
+		break;
+		case 2:
+
+		break;
+		case 3:
+			break;
+
+		case 4:
+//			Colour.Fword=White;
+//			Colour.black=LCD_COLOR_TEST_BUTON;
+//			if(Button_Page->page == 0)
+//			{
+//				for(i=0;i<3;i++)
+//				{
+//					Hex_Format(SaveSIM.QuickV[i+(Button_Page->page)*3].Num,3,5,0);
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,DispBuf,  0);
+//				}
+//				WriteString_16(BUTTOM_X_VALUE+3*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,"NEXT",  0);
+//			}else if(Button_Page->page == 1){
+//				for(i=0;i<3;i++)
+//				{
+//					Hex_Format(SaveSIM.QuickV[i+(Button_Page->page)*3].Num,3,5,0);
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,DispBuf,  0);
+//				}
+//				WriteString_16(BUTTOM_X_VALUE+3*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,"PREV",  0);
+//			}
+			
+
+			break;
+		case 5:
+
+			break;
+//		case 6:
+//			Colour.Fword=White;
+//			Colour.black=LCD_COLOR_TEST_BUTON;
+//			for(i=0;i<2;i++)
+//			{
+//				if(i==0)
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+20, BUTTOM_Y_VALUE, User_Comp[i],  0);
+//				else 
+//					WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+25, BUTTOM_Y_VALUE, User_Comp[i],  0);
+//			}
+//			break;
+		default:
+			
+		break;
+			
+	}
+
+}
+
+
 //显示设置参数的值Setup_Valueall
 void DispSet_value(Button_Page_Typedef* Button_Page)
 {
@@ -4400,17 +5268,17 @@ void Disp_FacrCheck_Item(Button_Page_Typedef* Button_Page)
 	
 	if(Button_Page->page == 1)
 	{
-		for(i=0;i<6;i++)
+		for(i=0;i<7;i++)
 		{
 			WriteString_16(0, 26+i*22, Fac_Calitem[i],  0);		
 		}
 	}else if(Button_Page->page == 2){
-		for(i=0;i<6;i++)
+		for(i=0;i<9;i++)
 		{
 			WriteString_16(0, 26+i*22, CtrV_Calitem[i],  0);		
 		}
 	}else if(Button_Page->page == 3){
-		for(i=0;i<6;i++)
+		for(i=0;i<8;i++)
 		{
 			WriteString_16(0, 26+i*22, Fac_ICalitem[i],  0);		
 		}
@@ -4433,12 +5301,12 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page)
 	
 	if(Button_Page->page == 1)
 	{
-		for(i=0;i<6;i++)
+		for(i=0;i<7;i++)
 		{
 			Colour.black=LCD_COLOR_TEST_BACK;
 			LCD_DrawRect(80, 26+i*22,172 ,26+i*22+16 , Colour.black ) ;
 		}
-		for(i=0;i<6;i++)
+		for(i=0;i<7;i++)
 		{
 			Black_Select=(Button_Page->index==(i+1))?1:0;
 			if(Black_Select)
@@ -4455,34 +5323,12 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page)
 			WriteString_16(80+76, 26+i*22, "V",  1);
 		}
 	}else if(Button_Page->page == 2){
-		for(i=0;i<6;i++)
+		for(i=0;i<9;i++)
 		{
 			Colour.black=LCD_COLOR_TEST_BACK;
 			LCD_DrawRect(80, 26+i*22,172 ,26+i*22+16 , Colour.black ) ;
 		}
-		for(i=0;i<4;i++)
-		{
-			Black_Select=(Button_Page->index==(i+1))?1:0;
-			if(Black_Select)
-			{
-				Colour.black=LCD_COLOR_SELECT;
-			}
-			else
-			{
-				Colour.black=LCD_COLOR_TEST_BACK;
-			}
-			Hex_Format(SaveSIM.CTRLV[i].Num,3,5,0);
-			LCD_DrawRect(80, 26+i*22,156 ,26+i*22+16 , Colour.black ) ;
-			WriteString_16(80, 26+i*22, DispBuf,  0);		
-			WriteString_16(80+76, 26+i*22, "V",  1);
-		}
-	}else if(Button_Page->page == 3){
-		for(i=0;i<6;i++)
-		{
-			Colour.black=LCD_COLOR_TEST_BACK;
-			LCD_DrawRect(80, 26+i*22,172 ,26+i*22+16 , Colour.black ) ;
-		}
-		for(i=0;i<6;i++)
+		for(i=0;i<9;i++)
 		{
 			Black_Select=(Button_Page->index==(i+1))?1:0;
 			if(Black_Select)
@@ -4498,6 +5344,28 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page)
 			WriteString_16(80, 26+i*22, DispBuf,  0);		
 			WriteString_16(80+76, 26+i*22, "A",  1);
 		}
+	}else if(Button_Page->page == 3){
+		for(i=0;i<8;i++)
+		{
+			Colour.black=LCD_COLOR_TEST_BACK;
+			LCD_DrawRect(80, 26+i*22,172 ,26+i*22+16 , Colour.black ) ;
+		}
+		for(i=0;i<8;i++)
+		{
+			Black_Select=(Button_Page->index==(i+1))?1:0;
+			if(Black_Select)
+			{
+				Colour.black=LCD_COLOR_SELECT;
+			}
+			else
+			{
+				Colour.black=LCD_COLOR_TEST_BACK;
+			}
+			Hex_Format(SaveSIM.CTRLV[i].Num,0,5,0);
+			LCD_DrawRect(80, 26+i*22,156 ,26+i*22+16 , Colour.black ) ;
+			WriteString_16(80, 26+i*22, DispBuf,  0);		
+			WriteString_16(80+76, 26+i*22, "",  1);
+		}
 	}
 	Disp_Fastbutton();
 	switch(Button_Page->index)
@@ -4512,6 +5380,9 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page)
 		case 4:
 		case 5:
 		case 6:
+		case 7:
+		case 8:
+		case 9:
 			Colour.Fword=White;
 			Colour.black=LCD_COLOR_TEST_BUTON;
 			WriteString_16(BUTTOM_X_VALUE+4*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,"校正",  0);
@@ -5329,8 +6200,8 @@ void Disp_Correction_SetR(Button_Page_Typedef* Button_Page)
 
 Sort_TypeDef Time_Set_Cot(Sort_TypeDef *Time)
 {
-	if(Time->Num > 200000)
-		Time->Num=200000;
+	if(Time->Num > 10000000)
+		Time->Num=10000000;
 //	Time->Dot=0;
 //	Time->Unit=1;
 	
@@ -5344,9 +6215,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 	{
 		if(Time->Unit==0)//单位是毫秒
 		{
-			if(Time->Num>20000)//大于60.000  显示60.000
+			if(Time->Num>30000)//大于60.000  显示60.000
 			{
-				Time->Num=20000;
+				Time->Num=30000;
 				Time->Dot=3;
 			}
 			else
@@ -5361,8 +6232,8 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>20)//大于60秒 显示60秒
-				Time->Num=20;
+			if(Time->Num>30)//大于60秒 显示60秒
+				Time->Num=30;
 			Time->Num*=1000;//增加1000倍  小数点为第三位
 			Time->Dot=3;	
 			Time->Unit=1;			
@@ -5474,9 +6345,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>20000)//
+			if(Time->Num>30000)//
 			{
-				Time->Num=20000;
+				Time->Num=30000;
 			
 			}
 //			else if(Time->Num>=10000)//xx.xxx时显示xx.xxx
@@ -5540,9 +6411,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>20000)
+			if(Time->Num>30000)
 			{
-				Time->Num=20000;//加一位显示
+				Time->Num=30000;//加一位显示
 				Time->Dot=3;
 				Time->Unit=1;
 				
@@ -5597,9 +6468,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>200)
+			if(Time->Num>300)
 			{
-				Time->Num=200;
+				Time->Num=300;
 				Time->Dot=3;
 				Time->Unit=1;
 			}
@@ -5627,11 +6498,11 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		if(Time->Unit==0)//单位为毫秒时
 		{
 			
-			if(Time->Num>20000)//xxxx.x时 显示最高位xxx
+			if(Time->Num>30000)//xxxx.x时 显示最高位xxx
 			{
 				
 				{
-					Time->Num=20000;	
+					Time->Num=30000;	
 					Time->Dot=3;//因为是毫秒  所以没有小数点
 					Time->Unit=1;
 				}
@@ -5659,9 +6530,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>20)
+			if(Time->Num>30)
 			{
-				Time->Num=20;
+				Time->Num=30;
 				
 			}
 			Time->Num*=1000;
@@ -5675,7 +6546,7 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 	else
 	{
 	
-		Time->Num=20000;
+		Time->Num=30000;
 		Time->Dot=3;
 		Time->Unit=1;
 	
@@ -6399,7 +7270,7 @@ void Disp_Button_Fun_Set(uint16_t xpos,uint16_t ypos,uint8_t * Disp_Item,Button_
 void FAN_CTRL(void)
 {
 	if(mainswitch == 1)
-	{
+	{	
 		if((Test_Dispvalue.Imvalue.Num > 2000 && Irange == 1) || temperature >= 45)
 		{
 			FAN_ON();
@@ -6418,6 +7289,7 @@ void FAN_CTRL(void)
 }
 void Disp_Testvalue(uint8_t siwtch)
 {
+	Colour.Fword=LCD_COLOR_WHITE;
 	if(siwtch == 0)
 	{
 		Test_Dispvalue.Vmvalue.Num = 0;
@@ -6432,53 +7304,210 @@ void Disp_Testvalue(uint8_t siwtch)
 		Hex_Format(0, 3 , 6 , 0);//显示功率
 		WriteString_16(390,185 ,DispBuf,0);
 		LCD_ShowFontCN_40_55(90-40,95+55,40,55,(uint8_t*)Out_Assic+22*(55*40/8));
-	}else if(siwtch == 1)
-	{
+	}else if(siwtch == 1){//内阻测试
 		
-		Hex_Format(Test_Dispvalue.Vmvalue.Num, 3 , 5 , 0);//显示电压
+		Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//显示电压
 		WriteString_Big(130-40,95 ,DispBuf);
 		
-		Hex_Format(Test_Dispvalue.Imvalue.Num, 3 , 5 , 0);//显示电流
-		WriteString_Big(130-40,95+55 ,DispBuf);
-		
-		if(Irange == 1)
+		if(Test_Dispvalue.RValue.Num == 0)
 		{
-			Test_Dispvalue.Pvalue.Num = (uint32_t)(((float)Test_Dispvalue.Vmvalue.Num/1000.0*((float)Test_Dispvalue.Imvalue.Num/1000.0))*1000);
+			WriteString_Big(130-40,95+55 ," -----");
 		}else{
-			Test_Dispvalue.Pvalue.Num = (uint32_t)(((float)Test_Dispvalue.Vmvalue.Num/1000.0*((float)Test_Dispvalue.Imvalue.Num/1000.0)));
+			Hex_Format(Test_Dispvalue.RValue.Num, 0 , 5 , 0);//显示内阻
+			WriteString_Big(130-40,95+55 ,DispBuf);
 		}
-		Hex_Format(Test_Dispvalue.Pvalue.Num, 3 , 6 , 0);//显示功率
-		WriteString_16(390,185,DispBuf,0);
-		if(Test_Dispvalue.Imvalue.sign == 0)
+		
+		Colour.black=LCD_COLOR_TEST_BACK;
+		Hex_Format(Test_Dispvalue.OCValue.Num,3,5,0);
+		LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+8 , FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
+		WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
+		WriteString_16(LIST2+88+32+70, FIRSTLINE+SPACE1, "A",  1);
+		
+		Hex_Format(Test_Dispvalue.ShortT.Num,0,3,0);		
+		LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1*2-2,SELECT_2END+9,FIRSTLINE+SPACE1*3-4, Colour.black ) ;//SPACE1
+		WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
+		WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1*2, "ms",  1);
+//		}
+	}else if(siwtch == 2){//程控负载
+		
+		Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//显示电压
+		WriteString_Big(130-40-40,95 ,DispBuf);
+		
+		Hex_Format(Test_Dispvalue.LoadC.Num, 3 , 5 , 0);//显示内阻
+		WriteString_Big(130-40-40,95+55 ,DispBuf);
+		
+//		Test_Dispvalue.LOADCAP[0].Num = 999999;
+		Hex_Format(Test_Dispvalue.LOADCAP[0].Num, 0 , 6 ,0 );//显示容量
+		WriteString_16(400-30,185 ,DispBuf,0);
+		LCD_ShowFontCN_40_55(90-40-40,95+55,40,55,(uint8_t*)Out_Assic+22*(55*40/8));
+		
+//		}
+	}else if(siwtch == 3){//程控电源
+		
+		Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//显示电压
+		WriteString_Big(130-40-40,95 ,DispBuf);
+		
+		Hex_Format(Test_Dispvalue.PowC.Num, 3 , 5 , 0);//显示内阻
+		WriteString_Big(130-40-40,95+55 ,DispBuf);
+		
+//		Test_Dispvalue.POWCAP[0].Num = 999999;
+		Hex_Format(Test_Dispvalue.POWCAP[0].Num, 0 , 6 ,0 );//显示容量
+		WriteString_16(400-30,185 ,DispBuf,0);
+		LCD_ShowFontCN_40_55(90-40-40,95+55,40,55,(uint8_t*)Out_Assic+22*(55*40/8));
+//		}
+	}else if(siwtch == 4){//列表测试
+		WriteString_16(110,94,"第",0);
+		WriteString_16(160,94,"步",0);
+		Hex_Format(Test_Dispvalue.liststep.Num+1, 0 , 2 , 0);//显示步数
+		WriteString_16(132,94 ,DispBuf,0);
+		if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 1)
 		{
-			LCD_ShowFontCN_40_55(90-40,95+55,40,55,(uint8_t*)Out_Assic+29*(55*40/8));
-		}else if(Test_Dispvalue.Imvalue.sign == 1){
-			LCD_ShowFontCN_40_55(90-40,95+55,40,55,(uint8_t*)Out_Assic+30*(55*40/8));
+			
+			
+			Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//显示电压
+			WriteString_16(100,116 ,DispBuf,0);
+			Hex_Format(Test_Dispvalue.PowC.Num, 3 , 5 , 0);//显示电流
+			WriteString_16(100,138 ,DispBuf,0);
+			Hex_Format(Test_Dispvalue.POWCAP[0].Num, 0 , 6 , 0);//显示容量
+			WriteString_16(100,160 ,DispBuf,0);
+			
+			WriteString_16(170,116 ,"V",0);
+			WriteString_16(170,138 ,"A",0);
+			WriteString_16(170,160 ,"mAH",0);
+			
+		}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 0){
+			Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//显示电压
+			WriteString_16(100,116 ,DispBuf,0);
+			Hex_Format(Test_Dispvalue.LoadC.Num, 3 , 5 , 0);//显示电流
+			WriteString_16(100,138 ,DispBuf,0);
+			Hex_Format(Test_Dispvalue.LOADCAP[0].Num, 0 , 6 , 0);//显示容量
+			WriteString_16(100,160 ,DispBuf,0);
+			
+			WriteString_16(170,116 ,"V",0);
+			WriteString_16(170,138 ,"A",0);
+			WriteString_16(170,160 ,"mAH",0);
+		}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2){
+			Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//显示电压
+			WriteString_16(100,116 ,DispBuf,0);
+			Hex_Format(Test_Dispvalue.LoadC.Num, 3 , 5 , 0);//显示电流
+			WriteString_16(100,138 ,DispBuf,0);
+			
+			WriteString_16(170,116 ,"V",0);
+			WriteString_16(170,138 ,"A",0);
 		}
 	}
-	FAN_CTRL();//风扇控制
+//	FAN_CTRL();//风扇控制
 
 }
+
+void ListHandle(void)
+{
+	if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 0){
+		if((Test_Dispvalue.LoadV.Num < SaveSIM.COFFV[Test_Dispvalue.liststep.Num].Num && startdelay == 0) || jumpflag == 1)
+		{
+			Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.LOADCAP[0];
+			listdelay = 0xffffff;
+			mainswitch = 0;
+			bc_raw = 0;
+			jumpflag = 0;
+			Send_Request(5,mainswitch);			
+			if(Test_Dispvalue.liststep.Num + 1 < SaveSIM.ListNum.Num)
+			{
+				startdelay = 1000;
+				while(listdelay != 0)
+				{
+					listdelay--;				
+				}
+				Test_Dispvalue.liststep.Num ++;
+				mainswitch = 1;
+				Send_Request(5,mainswitch);
+			}else{
+				listswitch = 0;
+				mainswitch = 0;
+				Test_Dispvalue.liststep.Num = 0;
+			}
+		}else{
+			if(startdelay != 0)
+			{
+				startdelay --;
+			}
+		}
+	}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 1)
+	{
+		if((Test_Dispvalue.PowC.Num < SaveSIM.COFFC[Test_Dispvalue.liststep.Num].Num && startdelay == 0) || jumpflag == 1)
+		{
+			Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.POWCAP[0];
+			listdelay = 0xffffff;
+			mainswitch = 0;
+			bc_raw = 0;
+			jumpflag = 0;
+			Send_Request(5,mainswitch);			
+			if(Test_Dispvalue.liststep.Num + 1 < SaveSIM.ListNum.Num)
+			{		
+				startdelay = 1000;
+				while(listdelay != 0)
+				{
+					listdelay--;				
+				}
+				Test_Dispvalue.liststep.Num ++;
+				mainswitch = 1;
+				Send_Request(5,mainswitch);
+			}else{	
+				listswitch = 0;
+				mainswitch = 0;
+				Test_Dispvalue.liststep.Num = 0;
+			}
+		}else{
+			if(startdelay != 0)
+			{
+				startdelay --;
+			}
+		}
+	}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2){
+		if(ocfinish == 1 || jumpflag == 1)
+		{
+			listdelay = 0xffffff;
+			mainswitch = 0;
+			jumpflag = 0;
+			Send_Request(5,mainswitch);
+			Test_Dispvalue.RES1[Test_Dispvalue.liststep.Num] = Test_Dispvalue.OCValue;
+			Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.ShortT;
+			if(Test_Dispvalue.liststep.Num + 1 < SaveSIM.ListNum.Num)
+			{
+				startdelay = 1000;
+				while(listdelay != 0)
+				{
+					listdelay--;				
+				}
+				Test_Dispvalue.liststep.Num ++;
+				mainswitch = 1;
+				Send_Request(5,mainswitch);
+			}else{
+				listswitch = 0;				
+				Test_Dispvalue.liststep.Num = 0;
+			}
+		}
+	}
+}
+
 void Disp_Big_MainUnit(uint8_t unit,uint8_t unit1)		//显示主参数单位
 {
 //	const uint8_t nuitnum[]={12,15,16,17,22,14,13};
 //	const uint8_t nuit_nuit[]={18,19,20,2,11,23,22};//F,H,Ω，S r °空格
-	LCD_ShowFontCN_40_55(DISP_UNIT_XPOS,DISP_UNIT_YPOS,40,55,(uint8_t*)Out_Assic+27*(55*40/8));
+	LCD_ShowFontCN_40_55(DISP_UNIT_XPOS-40,DISP_UNIT_YPOS,40,55,(uint8_t*)Out_Assic+27*(55*40/8));
 //	LCD_ShowFontCN_40_55(DISP_UNIT_XPOS+40,DISP_UNIT_YPOS,40,55,(uint8_t*)Out_Assic+28*(55*40/8));
 }
 
 void Disp_Big_SecondUnit(uint8_t unit,uint8_t unit1)	//显示副参数单位
 {
-//	const uint8_t nuitnum[]={12,15,16,17,22,14,13};
-//	const uint8_t nuit_nuit[]={18,19,20,2,11,23,22};//F,H,Ω，S r °空格
-	if(Irange == 1)
+	if(unit == 0)
 	{
-		LCD_ShowFontCN_40_55(DISP_UNIT_XPOS-40,DISP_UNIT_YPOS+55,40,55,(uint8_t*)Out_Assic+22*(55*40/8));
-	}else{
-		LCD_ShowFontCN_40_55(DISP_UNIT_XPOS-40,DISP_UNIT_YPOS+55,40,55,(uint8_t*)Out_Assic+31*(55*40/8));
+		LCD_ShowFontCN_40_55(DISP_UNIT_XPOS-40,DISP_UNIT_YPOS+52,40,55,(uint8_t*)Out_Assic+31*(55*40/8));
+		LCD_ShowFontCN_40_55(DISP_UNIT_XPOS,DISP_UNIT_YPOS+58,40,55,(uint8_t*)Out_Assic+20*(55*40/8));
+	}else{	
+
+		LCD_ShowFontCN_40_55(DISP_UNIT_XPOS-40,DISP_UNIT_YPOS+55,40,55,(uint8_t*)Out_Assic+28*(55*40/8));
 	}
-	LCD_ShowFontCN_40_55(DISP_UNIT_XPOS,DISP_UNIT_YPOS+55,40,55,(uint8_t*)Out_Assic+28*(55*40/8));
-//	LCD_ShowFontCN_40_55(DISP_UNIT_XPOS+40,DISP_UNIT_YPOS+55,40,55,(uint8_t*)Out_Assic+nuit_nuit[unit1]*(55*40/8));
 }
 
 
@@ -6812,7 +7841,28 @@ void Send_Request(u8 x,u8 req)
 		}break;
 		case 5:
 		{
-			sprintf(&USART_RX_BUF[len],"%1d",req);
+			sprintf(buf,"%02d,%05d,%05d,%1d",
+			SaveSIM.ITEM[Test_Dispvalue.liststep.Num],		//项目
+			SaveSIM.PARA1[Test_Dispvalue.liststep.Num].Num,  	//参数1
+			SaveSIM.PARA2[Test_Dispvalue.liststep.Num].Num,     //参数1
+			req
+			);
+			if(req == 1)
+			{
+				if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 0)
+				{
+					listcap = 1;
+				}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] ==1){
+					listcap = 2;
+				}
+			}else{
+				listcap = 0;
+				Test_Dispvalue.LOADCAP[0].Num = 0;
+				Test_Dispvalue.POWCAP[0].Num = 0;
+			}
+			strcat(USART_RX_BUF,buf);
+			len+=strlen(buf)-1;
+			sendflag = 3;
 		}break;
 		case 6:
 		{
@@ -6846,9 +7896,9 @@ void Send_Request(u8 x,u8 req)
 		}break;
 		case 14:
 		{
-			sprintf(buf,"%d%07.3f",req-1,SaveSIM.CTRLV[req-1].Num/1000.0);
+			sprintf(buf,"%d%05d",req-1,SaveSIM.CTRLV[req-1].Num);
 			strcat(USART_RX_BUF,buf);
-			len+=7;
+			len+=5;
 		}break;
 		case 15:
 		{
@@ -6922,7 +7972,7 @@ uint16_t SetErr_ACK(char *buf, uint8_t addr ,uint8_t ucErr)
 uint16_t SerialRemoteHandleL(uint8_t len,char* buf)
 {
 
-  
+	static u8 sumcount;
     uint16_t currCharNum;
     uint32_t temp1 = 0;
   uint8_t Gmode_Vale;
@@ -6971,122 +8021,199 @@ uint16_t SerialRemoteHandleL(uint8_t len,char* buf)
 		  currCharNum+=templen;
 		  switch(j)
           {
-          	case 0:	
+          	case 0:
+				pntlen = 5;    //
+				for(i=0;i<5;i++)
+				{
+					temp1 = temp1*10+(buf[currCharNum++]-0x30);
+				}
+				if(sumcount < 5)
+				{
+					LVSUM += temp1;
+				}else{
+					Test_Dispvalue.LoadV.Num = LVSUM/5;
+					if(Test_Dispvalue.LoadV.Num < 300)
+					{
+						Test_Dispvalue.LoadV.Num = 0;
+					}
+					LVSUM = 0;
+				}
+				
+				temp1 = 0;
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<5;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				Test_Dispvalue.LoadC.Num = temp1;
+				
+				temp1 = 0;
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<5;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				Test_Dispvalue.PowV.Num = temp1;
+				
+				temp1 = 0;
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<5;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+//				Test_Dispvalue.PowC.Num = temp1;
+				if(sumcount < 5)
+				{
+					PCSUM += temp1;
+				}else{
+					Test_Dispvalue.PowC.Num = PCSUM/5;
+//					if(Test_Dispvalue.PowC.Num < 300)
+//					{
+//						Test_Dispvalue.PowC.Num = 0;
+//					}
+					PCSUM = 0;
+				}
+				
+				temp1 = 0;
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<5;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				Test_Dispvalue.RValue.Num = temp1;
+				
+				temp1 = 0;
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<5;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				Test_Dispvalue.OCValue.Num = temp1;
+				
+				
+				temp1 = 0;
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<3;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				Test_Dispvalue.ShortT.Num = temp1/2;
+				
+				temp1 = 0;		
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<1;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				mainswitch = temp1;
+				
+				temp1 = 0;		
+				if(buf[currCharNum++] == ',')
+				{
+					for(i=0;i<1;i++)
+					{
+						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+					}
+				}
+				ocfinish = temp1;
+				
+				if(sumcount < 5)
+				{
+					sumcount ++;
+				}else{
+					sumcount = 0;
+				}
+//				if(mainswitch == 0)
+//				{
+//					Send_Request(3,mainswitch);
+//				}
+				
 			break;
 			case 1:
 
 				break;
 			case 2:
-				pntlen = 5;    //
-				if(buf[currCharNum]=='+')
-				{
-					currCharNum++;
-					for(i=0;i<5;i++)
-					{
-						temp1 = temp1*10+(buf[currCharNum++]-0x30);
-					}
-					Test_Dispvalue.Vmvalue.Num = temp1;
-//					currCharNum++;
-					temp1 = 0;
-					
-					if(buf[currCharNum]=='+')
-					{
-						Test_Dispvalue.Imvalue.sign = 0;
-						currCharNum++;
-						for(i=0;i<5;i++)
-						{
-							temp1 = temp1*10+(buf[currCharNum++]-0x30);
-						}
-					}else if(buf[currCharNum]=='-'){
-						Test_Dispvalue.Imvalue.sign = 1;
-						currCharNum++;
-						for(i=0;i<5;i++)
-						{
-							temp1 = temp1*10+(buf[currCharNum++]-0x30);
-						}
-					}
-					Test_Dispvalue.Imvalue.Num = temp1;
-					
-					temp1 = 0;
-					if(buf[currCharNum++] == ',')
-					{
-						temp1 = temp1*10+(buf[currCharNum++]-0x30);
-						Irange = temp1;
-					}
-					
-					temp1 = 0;
-					if(buf[currCharNum++] == ',')
-					{
-						temp1 = temp1*10+(buf[currCharNum++]-0x30);
-						if(mainswitch == 1)
-						{
-							mainswitch = temp1;
-						}
-					}
-					temp1 = 0;
-					if(buf[currCharNum++] == ',')
-					{
-						for(i=0;i<2;i++)
-						{
-							temp1 = temp1*10+(buf[currCharNum++]-0x30);
-						}
-						temperature = temp1;
-					}
-//					if(mainswitch == 1)
-//					{
-//						sendflag = 1;
-//					}
-				}
-				else
-				{
-					
-				}
-				break;
-//			case 3:
-//				pntlen = 1;
-//				if(buf[currCharNum]=='?')
+//				pntlen = 5;    //
+//				if(buf[currCharNum]=='+')
 //				{
-//					sprintf(&buf[currCharNum],"%1d",Gmode_Vale);
-//				    currCharNum+=pntlen;
-//					buf[currCharNum] = ChrEndR;
 //					currCharNum++;
-////				    buf[currCharNum ++] = ChrEndS;
+//					for(i=0;i<5;i++)
+//					{
+//						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+//					}
+//					Test_Dispvalue.Vmvalue.Num = temp1;
+////					currCharNum++;
+//					temp1 = 0;
 //					
+//					if(buf[currCharNum]=='+')
+//					{
+//						Test_Dispvalue.Imvalue.sign = 0;
+//						currCharNum++;
+//						for(i=0;i<5;i++)
+//						{
+//							temp1 = temp1*10+(buf[currCharNum++]-0x30);
+//						}
+//					}else if(buf[currCharNum]=='-'){
+//						Test_Dispvalue.Imvalue.sign = 1;
+//						currCharNum++;
+//						for(i=0;i<5;i++)
+//						{
+//							temp1 = temp1*10+(buf[currCharNum++]-0x30);
+//						}
+//					}
+//					Test_Dispvalue.Imvalue.Num = temp1;
+//					
+//					temp1 = 0;
+//					if(buf[currCharNum++] == ',')
+//					{
+//						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+//						Irange = temp1;
+//					}
+//					
+//					temp1 = 0;
+//					if(buf[currCharNum++] == ',')
+//					{
+//						temp1 = temp1*10+(buf[currCharNum++]-0x30);
+//						if(mainswitch == 1)
+//						{
+//							mainswitch = temp1;
+//						}
+//					}
+//					temp1 = 0;
+//					if(buf[currCharNum++] == ',')
+//					{
+//						for(i=0;i<2;i++)
+//						{
+//							temp1 = temp1*10+(buf[currCharNum++]-0x30);
+//						}
+//						temperature = temp1;
+//					}
 //				}
 //				else
 //				{
-//					tmpFg = 1;
-//		            for(i=0;i<pntlen;i++)
-//		            {
-//					   if(IsDigitChar(buf[currCharNum+i])==1)
-//					   {
-//					      tmpFg = (tmpFg&0x01);
-//					   }
-//					   else
-//					   {
-//					      tmpFg = 0;
-//					   }
-//		            }
-//					if(tmpFg!=1||buf[currCharNum+pntlen]!=ChrEndR)
-//					{
-//						return SetErr_ACK(buf, addr ,CMD_ERR);
-//						
-//					}					
-//					for(i=0,temp1=0;i<pntlen;i++)
-//		            {
-//		                  temp1 = temp1*10+(buf[currCharNum++]-0x30);
-//					}		                   
-//				    if(temp1 >Mode_H)
-//			         {
-//			             return SetErr_ACK(buf, addr ,PARA_ERR);
-//						 
-//			         }
-//		        
-//							 Mode=temp1;
-//							Change_MODE_Val(Mode);
-//					 buf[currCharNum++] = ChrEndS;
-//		        }
-//				break;
+//					
+//				}
+				break;
+			case 3:
+				sendflag = 0;
+			break;
+			case 4:
+				sendflag = 0;
+			break;
 //			case 4:
 //				pntlen = 10;    //
 //				if(buf[currCharNum]=='?')
