@@ -125,7 +125,7 @@ int main(void)
     debug_frmwrk_init();
 	softswitch=0;
 	debug_uart3_init(4);//串口3初始化
-	lpc1788_DMA_Init();
+//	lpc1788_DMA_Init();
 	EEPROM_Init();
 	
     RTC_INT();
@@ -197,6 +197,9 @@ int main(void)
 			break;
 			case SYS_STATUS_LIST:   //列表测试显示
 				List_Process();
+			break;
+			case SYS_STATUS_COMP:   //列表测试显示
+				Comp_Process();
 			break;
 			case SYS_STATUS_FACRDEBUG:	 //公司校正界面
 				Fac_DebugProcess();

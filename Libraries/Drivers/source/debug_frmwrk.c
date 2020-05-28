@@ -55,6 +55,9 @@ char recbuf[200];
 uint16_t USART_RX_STA=0;       //接收状态标记
 static void MODS_03H(void);
 static void MODS_06H(void);
+//static void MODS_50H(void);
+//static void MODS_51H(void);
+//static void MODS_52H(void);
 uint16_t CRC16(uint8_t *_pBuf, uint16_t _usLen);
 uint8_t graphunit;
 /*********************************************************************//**
@@ -1006,6 +1009,18 @@ void RecHandle(void)
         {
             MODS_06H();
         }break;
+//		case 0x50:
+//        {
+//            MODS_50H();
+//        }break;
+//		case 0x51:
+//        {
+//            MODS_51H();
+//        }break;
+//		case 0x52:
+//        {
+//            MODS_52H();
+//        }break;
         default:break;
     }
 }
@@ -1017,62 +1032,35 @@ static uint8_t MODS_ReadRegValue(uint16_t reg_addr, uint8_t *reg_value)
 
 	switch (reg_addr)									/* ??????? */
 	{
-        case SLAVE_REG_P00:
-			value = Test_Dispvalue.Vmvalue.Num;
+        case SLAVE_REG_P00://内阻
+			value = Test_Dispvalue.RValue.Num;
 			break;
-		case SLAVE_REG_P01:
-			value = (Test_Dispvalue.Imvalue.sign == 1)?Test_Dispvalue.Imvalue.Num:0;
-			if(Irange == 0)
-			{
-				if(graphunit == 1)
-				{
-					value/=1000;
-				}
-			}
+		case SLAVE_REG_P01://负载电压
+			value =Test_Dispvalue.LoadV.Num;
 			break;
 	
-		case SLAVE_REG_P02://输出电压
-			value = Test_Dispvalue.Vmvalue.Num;
+		case SLAVE_REG_P02://负载电流
+			value = Test_Dispvalue.LoadC.Num;
 			break;
-		case SLAVE_REG_P03: //输出电流
-			value = (Test_Dispvalue.Imvalue.sign == 1)?Test_Dispvalue.Imvalue.Num:0;
-			if(Irange == 0)
-			{
-				if(graphunit == 1)
-				{
-					value/=1000;
-				}
-			}
+		case SLAVE_REG_P03: //输出电压
+			value = Test_Dispvalue.PowV.Num;
 			break;
 
-		case SLAVE_REG_P04://输出功率
-			value = (Test_Dispvalue.Imvalue.sign == 1)?Test_Dispvalue.Pvalue.Num/10:0;
+		case SLAVE_REG_P04://输出电流
+			value = Test_Dispvalue.PowC.Num;
 			break;
-		case SLAVE_REG_P05://输入电流
-			value = (Test_Dispvalue.Imvalue.sign == 0)?Test_Dispvalue.Imvalue.Num:0;
-			if(Irange == 0)
-			{
-				if(graphunit == 1)
-				{
-					value/=1000;
-				}
-			}
+		case SLAVE_REG_P05://过流
+			mainswitch = 1;
+			Send_Request(5,mainswitch);	
 			break;
 		case SLAVE_REG_P06:
-			value = (Test_Dispvalue.Imvalue.sign == 0)?Test_Dispvalue.Imvalue.Num:0;
-			if(Irange == 0)
-			{
-				if(graphunit == 1)
-				{
-					value/=1000;
-				}
-			}
+			value = 0;
 			break;
 		case SLAVE_REG_P07://输入功率
-			value = (Test_Dispvalue.Imvalue.sign == 0)?Test_Dispvalue.Pvalue.Num/10:0;
+			value = 0;
 			break;
 		case SLAVE_REG_P08:
-			value =	temperature;	
+			value =	0;	
 			break;
 
 		case SLAVE_REG_P09:
@@ -1117,6 +1105,7 @@ static uint8_t MODS_ReadRegValue(uint16_t reg_addr, uint8_t *reg_value)
 
 	return 1;											/* ???? */
 }
+
 
 
 static uint8_t MODS_WriteRegValue(uint16_t reg_addr, uint16_t reg_value)
@@ -1276,6 +1265,117 @@ err_ret:
 		MODS_SendAckErr(g_tModS.RspCode);		/* ???????? */
 	}
 }
+
+//static void MODS_50H(void)
+//{
+//    uint16_t reg;
+//	uint16_t value;
+
+//	g_tModS.RspCode = RSP_OK;
+
+//	if (g_tModS.RxCount != 8)
+//	{
+//		g_tModS.RspCode = RSP_ERR_VALUE;		
+//		goto err_ret;
+//	}
+
+//	reg = BEBufToUint16(&g_tModS.RxBuf[2]);
+//	value = BEBufToUint16(&g_tModS.RxBuf[4]);
+//    
+
+// 	if (MODS_Load(reg, value) == 1)
+// 	{
+// 		;
+// 	}
+// 	else
+// 	{
+// 		g_tModS.RspCode = RSP_ERR_REG_ADDR;
+// 	}
+
+//err_ret:
+//	if (g_tModS.RspCode == RSP_OK)
+//	{
+//		MODS_SendAckOk();
+//	}
+//	else
+//	{
+//		MODS_SendAckErr(g_tModS.RspCode);
+//	}
+//}
+
+//static void MODS_51H(void)
+//{
+//    uint16_t reg;
+//	uint16_t value;
+
+//	g_tModS.RspCode = RSP_OK;
+
+//	if (g_tModS.RxCount != 8)
+//	{
+//		g_tModS.RspCode = RSP_ERR_VALUE;		
+//		goto err_ret;
+//	}
+
+//	reg = BEBufToUint16(&g_tModS.RxBuf[2]);
+//	value = BEBufToUint16(&g_tModS.RxBuf[4]);
+//    
+
+// 	if (MODS_Pow(reg, value) == 1)
+// 	{
+// 		;
+// 	}
+// 	else
+// 	{
+// 		g_tModS.RspCode = RSP_ERR_REG_ADDR;
+// 	}
+
+//err_ret:
+//	if (g_tModS.RspCode == RSP_OK)
+//	{
+//		MODS_SendAckOk();
+//	}
+//	else
+//	{
+//		MODS_SendAckErr(g_tModS.RspCode);
+//	}
+//}
+
+//static void MODS_52H(void)
+//{
+//    uint16_t reg;
+//	uint16_t value;
+
+//	g_tModS.RspCode = RSP_OK;
+
+//	if (g_tModS.RxCount != 8)
+//	{
+//		g_tModS.RspCode = RSP_ERR_VALUE;		
+//		goto err_ret;
+//	}
+
+//	reg = BEBufToUint16(&g_tModS.RxBuf[2]);
+//	value = BEBufToUint16(&g_tModS.RxBuf[4]);
+//    
+
+// 	if (MODS_CDC(reg, value) == 1)
+// 	{
+//		
+// 	}
+// 	else
+// 	{
+// 		g_tModS.RspCode = RSP_ERR_REG_ADDR;
+// 	}
+
+//err_ret:
+//	if (g_tModS.RspCode == RSP_OK)
+//	{
+//		MODS_SendAckOk();
+//	}
+//	else
+//	{
+//		MODS_SendAckErr(g_tModS.RspCode);
+//	}
+//}
 //==========================================================
 //函数名称：SendDataToCom
 //函数功能：发送串口数据

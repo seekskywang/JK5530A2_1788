@@ -119,11 +119,6 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
-          <Key>DLGUARM</Key>
-          <Name>猬Cw?3?3趏蕎</Name>
-        </SetRegEntry>
-        <SetRegEntry>
-          <Number>0</Number>
           <Key>PWSTATINFO</Key>
           <Name>200,50,700</Name>
         </SetRegEntry>
@@ -380,6 +375,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>cdctime,0x0A</ItemText>
         </Ww>
+        <Ww>
+          <count>42</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>jumpflag</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -619,6 +619,11 @@
         </Ww>
         <Ww>
           <count>47</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>listcap</ItemText>
+        </Ww>
+        <Ww>
+          <count>48</count>
           <WinNumber>2</WinNumber>
           <ItemText>listcap</ItemText>
         </Ww>

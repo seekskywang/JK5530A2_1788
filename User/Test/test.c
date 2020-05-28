@@ -33,7 +33,7 @@ extern u8 listdis;
 uint8_t listpage=0;
 uint32_t cdctime;
 float bc_raw;
-
+uint8_t buttonpage;
 uint16_t LVDISP;
 uint16_t IRDISP;
 //const uint8_t Disp_Main_Ord[][3]={
@@ -214,6 +214,7 @@ void Power_Process(void)
         Delay(10);
 		if(i == 10)
 		{
+			Send_Request(4,1);
 //			Send_Request(1,0);
 		}
 //		if(i==50)
@@ -525,13 +526,13 @@ void Load_Process(void)
 						case 0:
 							if(mainswitch == 0)
 							{
-								Send_Request(2,2);
 								SetSystemStatus(SYS_STATUS_TEST);
 							}
 						break;
 						case 1:
 						{
-							
+							SaveSIM.LoadMode = 0;
+							Send_Request(4,1);
 						}break;
 						case 4:
 							
@@ -555,7 +556,8 @@ void Load_Process(void)
 						}break;
 						case 1:
 						{
-							
+							SaveSIM.LoadMode = 1;
+							Send_Request(4,1);
 						}break;
 						case 4:
 						
@@ -629,7 +631,7 @@ void Load_Process(void)
 				case Key_SETUP:
 					if(mainswitch == 0)
 					{
-//						SetSystemStatus(SYS_STATUS_SETUPTEST);
+						SetSystemStatus(SYS_STATUS_COMP);
 					}
 				break;
 				case Key_FAST:
@@ -711,7 +713,7 @@ void Load_Process(void)
 							Coordinates.xpos=LIST1+88+16;
 							Coordinates.ypos=FIRSTLINE+SPACE1*1;
 							Coordinates.lenth=76;
-							SaveSIM.LoadC=Disp_Set_Num(&Coordinates);
+							SaveSIM.LoadC=Disp_Set_C(&Coordinates);
 							Send_Request(4,1);
 							break;
 						case 4:
@@ -1012,7 +1014,7 @@ void Pow_Process(void)
 				case Key_SETUP:
 					if(mainswitch == 0)
 					{
-//						SetSystemStatus(SYS_STATUS_SETUPTEST);
+						SetSystemStatus(SYS_STATUS_COMP);
 					}
 				break;
 				case Key_FAST:
@@ -1102,6 +1104,10 @@ void Pow_Process(void)
 							Coordinates.ypos=FIRSTLINE+SPACE1*1;
 							Coordinates.lenth=76;
 							SaveSIM.PowC=Disp_Set_C(&Coordinates);
+							if(SaveSIM.PowC.Num > 10000)
+							{
+								SaveSIM.PowC.Num = 10000;
+							}
 							Send_Request(4,1);
 							break;
 						case 3:
@@ -1194,6 +1200,7 @@ void List_Process(void)
 	Button_Page.page=1;
 	Button_Page.index=0;
 	Button_Page.third=0xff;
+	buttonpage = 0;
 	lcd_Clear(LCD_COLOR_TEST_BACK);
 	Disp_List_Item();
 
@@ -1225,10 +1232,33 @@ void List_Process(void)
 					cdctime ++;
 					bc_raw += (float)Test_Dispvalue.LoadC.Num * 1/3600;
 					Test_Dispvalue.LOADCAP[0].Num = (int)bc_raw;
+					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+					{
+						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+						{
+							jumpflag = 1;
+						}
+					}
 				}else if(listcap == 2){//电源容量
 					cdctime ++;
 					bc_raw += (float)Test_Dispvalue.PowC.Num * 1/3600;
 					Test_Dispvalue.POWCAP[0].Num = (int)bc_raw;
+					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+					{
+						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+						{
+							jumpflag = 1;
+						}
+					}
+				}else if(listcap == 3){//过充超时
+					cdctime ++;
+					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+					{
+						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+						{
+							jumpflag = 1;
+						}
+					}
 				}
 			}else{
 				bc_raw = 0;
@@ -1239,7 +1269,7 @@ void List_Process(void)
 		if(Button_Page.page < 4)
 		{
 			listpage = SaveSIM.ListNum.Num/5+1;
-			listNo = (((Button_Page.index + 25*(Button_Page.page-1))/5))-1;
+			listNo = ((((Button_Page.index - 5) + 30*(Button_Page.page-1))/6));
 		}
 		if(Disp_Flag==1)
 		{
@@ -1250,7 +1280,7 @@ void List_Process(void)
 				
 				Disp_List_value(&Button_Page);				
 				
-			}else if(Button_Page.page == 5){
+			}else if(Button_Page.page > 4){
 				Disp_List_Res(&Button_Page);
 			}
 		}
@@ -1262,6 +1292,13 @@ void List_Process(void)
 			if(listswitch == 1)
 			{
 				ListHandle();
+				if(listswitch == 0)
+				{
+					Button_Page.page = 5;
+					Disp_Button_Res();
+					Disp_List_Res(&Button_Page);
+					Comp_Led();
+				}
 			}
 			if(USART_RX_STA&0x8000)	   //判断是否接收完数据
 			{					   
@@ -1323,11 +1360,18 @@ void List_Process(void)
 								
 						}
 					}else{
-						switch(Button_Page.index%5)
+						switch((Button_Page.index-5)%6)
 						{
 							case 0:
 							{
-								SaveSIM.ITEM[listNo] = 0;
+								SaveSIM.ITEM[listNo] = 0+buttonpage*3;
+								if(SaveSIM.ITEM[listNo] == 3)
+								{
+									Disp_Warning(1);
+									SaveSIM.TIME[listNo].Num = 3;
+								}else{
+									Disp_Warning(0);
+								}
 							}break;
 							
 						}
@@ -1353,21 +1397,24 @@ void List_Process(void)
 									SaveSIM.LoopTest = 1;
 								default:
 									break;
-							
+
 							
 							}
 						}else{
-							switch(Button_Page.index%5)
+							switch((Button_Page.index-5)%6)
 							{
 								case 0:
 								{
-									SaveSIM.ITEM[listNo] = 1;
+									SaveSIM.ITEM[listNo] = 1+buttonpage*3;
 								}break;
 								
 							}
 						}
 					}else if(Button_Page.page == 4){
 						jumpflag = 1;
+					}else if(Button_Page.page > 5){
+						Button_Page.page --;
+						Disp_Button_Res();
 					}
 					Savetoeeprom();
 				break;
@@ -1396,39 +1443,79 @@ void List_Process(void)
 							
 							}
 						}else{
-							switch(Button_Page.index%5)
+							switch((Button_Page.index-5)%6)
 							{
 								case 0:
 								{
-									SaveSIM.ITEM[listNo] = 2;
+									SaveSIM.ITEM[listNo] = 2+buttonpage*3;
 								}break;
 								
 							}
 						}
 					}else if(Button_Page.page == 4){
 						Button_Page.page = 5;
+						Disp_Button_Res();
+					}else if(Button_Page.page > 4){
+						if(SaveSIM.ListNum.Num > 5)
+						{
+							if(SaveSIM.ListNum.Num <= 10)
+							{
+								if(Button_Page.page < 6)
+								{
+									Button_Page.page ++;
+									Disp_Button_Res();
+								}
+							}else{
+								if(Button_Page.page < 7)
+								{
+									Button_Page.page ++;
+									Disp_Button_Res();
+								}
+							}
+						}
 					}
 					Savetoeeprom();
 				break;
 				case Key_F4:
 					if(Button_Page.page < 4)
 					{
-						switch(Button_Page.index)
+						if(Button_Page.index < 5)
 						{
-							case 0:
-								SetSystemStatus(SYS_STATUS_LIST);
-							case 4:
+							switch(Button_Page.index)
+							{
+								case 0:
+//									SetSystemStatus(SYS_STATUS_COMP);
+								case 4:
+									
+									break;
+								default:
+									break;
+							
+							}	
+						}else{
+							switch((Button_Page.index-5)%6)
+							{
+								case 0:
+								{
+									if(buttonpage == 0)
+									{
+										buttonpage = 1;
+									}else if(buttonpage == 1){
+										buttonpage = 0;
+									}
+								}break;
 								
-								break;
-							default:
-								break;
-						
-						}	
+							}
+						}
 					}else if(Button_Page.page == 4){
 						Button_Page.page = 1;
-					}else if(Button_Page.page == 5){
+						
+					}else if(Button_Page.page > 4){
+						Comp_flag = 0;
+						Comp_ledoff();
 						Button_Page.page = 4;
 						LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_MID);
+						Disp_Button_List();
 					}
 					
 					Savetoeeprom();
@@ -1448,6 +1535,11 @@ void List_Process(void)
 							listswitch = 1;
 							mainswitch = 1;
 							startdelay = 100;
+							if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2)
+							{
+								Test_Dispvalue.RES1[Test_Dispvalue.liststep.Num] = Test_Dispvalue.RValue;
+								Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.Vmvalue;
+							}
 						}else{
 							listswitch = 0;
 							mainswitch = 0;
@@ -1474,7 +1566,7 @@ void List_Process(void)
 				case Key_SETUP:
 					if(mainswitch == 0)
 					{
-//						SetSystemStatus(SYS_STATUS_SETUPTEST);
+						SetSystemStatus(SYS_STATUS_COMP);
 					}
 				break;
 				case Key_FAST:
@@ -1496,7 +1588,7 @@ void List_Process(void)
 					}else if(Button_Page.index>4){
 						if(Button_Page.index<1)
 						{
-							Button_Page.index = 5+SaveSIM.ListNum.Num*5-1;
+							Button_Page.index = 5+SaveSIM.ListNum.Num*6-1;
 						}
 						else{
 							Button_Page.index --;
@@ -1521,13 +1613,47 @@ void List_Process(void)
 							Button_Page.index-=2;
 						}
 					}else if(Button_Page.index>4){
-						if(Button_Page.index>5+SaveSIM.ListNum.Num*5-1)
+						if(Button_Page.page < 2)
 						{
-							Button_Page.index = 0;
+							if(SaveSIM.ListNum.Num >= 5)
+							{
+								if(Button_Page.index>=34)
+								{
+									
+								}
+								else{
+									Button_Page.index ++;
+								}
+							}else{
+								if(Button_Page.index>5+SaveSIM.ListNum.Num*6-1)
+								{
+									
+								}
+								else{
+									Button_Page.index ++;
+								}
+							}
+						}else if(Button_Page.page >= 2 && Button_Page.page < 4){
+							if(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1)  >= 5)
+							{
+								if(Button_Page.index>=34)
+								{
+									
+								}
+								else{
+									Button_Page.index ++;
+								}
+							}else if(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1)  < 5){
+								if(Button_Page.index>5+(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1))*6-1)
+								{
+									
+								}
+								else{
+									Button_Page.index ++;
+								}
+							}
 						}
-						else{
-							Button_Page.index ++;
-						}
+						
 					}
 						
 				break;
@@ -1535,16 +1661,16 @@ void List_Process(void)
 					
 					if(Button_Page.index>4)
 					{
-						if(Button_Page.index>listdis-5-1)
+						if(Button_Page.index>listdis-6-1)
 						{
 							if(Button_Page.page < listpage)
 							{
 								Button_Page.page ++;
-								Button_Page.index=Button_Page.index-20;
+								Button_Page.index=Button_Page.index-24;
 							}
 							
 						}else{
-							Button_Page.index += 5;
+							Button_Page.index += 6;
 						}						
 						
 					}
@@ -1568,19 +1694,19 @@ void List_Process(void)
 							if(Button_Page.page > 1)
 							{
 								Button_Page.page --;
-								Button_Page.index=Button_Page.index+20;
+								Button_Page.index=Button_Page.index+24;
 							}else{
 								Button_Page.index = 2;
 							}
 						}else{
-							Button_Page.index -= 5;
+							Button_Page.index -= 6;
 						}						
 						
 					}
 					else{
 						if(Button_Page.index == 0)
 						{
-							Button_Page.index = 5+SaveSIM.ListNum.Num*5-1;
+							Button_Page.index = 5+SaveSIM.ListNum.Num*6-1;
 						}else{
 							Button_Page.index--;
 						}
@@ -1625,7 +1751,7 @@ void List_Process(void)
 								Coordinates.xpos=LIST1+88+16;
 								Coordinates.ypos=FIRSTLINE;
 								Coordinates.lenth=76;
-								SaveSIM.ListNum=Disp_Set_T(&Coordinates);
+								SaveSIM.ListNum=Disp_Set_Step(&Coordinates);
 								List_Process();
 								break;
 	//						case 2:
@@ -1661,40 +1787,397 @@ void List_Process(void)
 						
 						}
 					}else{
-						switch(Button_Page.index%5)
+						switch((Button_Page.index - 5)%6)
 						{
 							case 1:
 							{
-								Coordinates.xpos=listcol[Button_Page.index%5]+3;
-								Coordinates.ypos=listrow[Button_Page.index/5-1]+3;
+								Coordinates.xpos=listcol[1]+3;
+								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
 								Coordinates.lenth=76;
 								SaveSIM.PARA1[listNo]= Disp_Set_Num(&Coordinates);
 							}break;
 							case 2:
 							{
-								Coordinates.xpos=listcol[Button_Page.index%5]+3;
-								Coordinates.ypos=listrow[Button_Page.index/5-1]+3;
+								Coordinates.xpos=listcol[2]+3;
+								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
 								Coordinates.lenth=76;
 								SaveSIM.PARA2[listNo]= Disp_Set_C(&Coordinates);
 							}break;
 							case 3:
 							{
-								Coordinates.xpos=listcol[Button_Page.index%5]+3;
-								Coordinates.ypos=listrow[Button_Page.index/5-1]+3;
+								Coordinates.xpos=listcol[3]+3;
+								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
 								Coordinates.lenth=76;
 								SaveSIM.COFFV[listNo]= Disp_Set_Num(&Coordinates);
 							}break;
 							case 4:
 							{
-								Coordinates.xpos=listcol[Button_Page.index%5]+3;
-								Coordinates.ypos=listrow[Button_Page.index/5-1]+3;
+								Coordinates.xpos=listcol[4]+3;
+								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
 								Coordinates.lenth=76;
 								SaveSIM.COFFC[listNo]= Disp_Set_C(&Coordinates);
+							}break;
+							case 5:
+							{
+								Coordinates.xpos=listcol[5]+3;
+								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
+								Coordinates.lenth=76;
+								SaveSIM.TIME[listNo]= Disp_Set_T(&Coordinates);
 							}break;
 							
 							default:
 								break;	
 						}
+					}
+					Savetoeeprom();
+				break;
+				case Key_BACK:
+					
+				break;
+				case Key_LOCK:
+					if(lock_flag)
+						lock_flag=0;
+					else
+						lock_flag=1;
+					if(lock_flag)
+					{
+						Lock_Control_On();
+						Lock_LedOn();
+						
+					}
+					else
+					{
+						Lock_LedOff();
+						Lock_Control_Off();
+					
+					
+					}
+					
+				break;
+				case Key_BIAS:
+					
+				break;
+				case Key_REST:
+					
+				break;
+				case Key_TRIG:
+					
+				break;
+				default:
+					
+				break;
+					
+			}		
+		
+		}
+	}
+}
+
+//列表测试
+void Comp_Process(void)
+{
+	Disp_Coordinates_Typedef  Coordinates;
+	static u8 sendcount;
+	uint16_t len;
+	uint8_t len1 =0;
+	uint8_t timebuff[10];
+	Button_Page_Typedef Button_Page;
+	const uint8_t DISP_UnitMain[]=
+	{ 0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,3,3,2,2,2};
+	const uint8_t DISP_UnitSecond[]=
+	{ 6,6,3,2,6,6,2,6,2,2,6,6,6,2,2,5,4,5,4,2,6,6};
+	uint32_t keynum=0;
+	uint8_t key,lock_flag=0;
+    uint8_t page=1,i;
+	uint8_t Disp_Flag=1;
+	uint16_t listNo=0;
+	Button_Page.page=1;
+	Button_Page.index=0;
+	Button_Page.third=0xff;
+	buttonpage = 0;
+	lcd_Clear(LCD_COLOR_TEST_BACK);
+	Disp_Comp_Item();
+
+	while(GetSystemStatus()==SYS_STATUS_COMP)
+	{
+		if(Rtc_intflag)
+        {
+            Rtc_intflag=0;
+            Colour.Fword=LCD_COLOR_WHITE;
+            Colour.black=LCD_COLOR_TEST_BACK;
+            //sprintf((char *)timebuff,"%2d:%2d:%2d",RTC_TIME_DISP.HOUR,RTC_TIME_DISP.MIN,RTC_TIME_DISP.SEC);
+            //Hex_Format(RTC_TIME_DISP.HOUR, 0, 2, 1);
+            timebuff[0]=RTC_TIME_DISP.HOUR/10+'0';
+            timebuff[1]=RTC_TIME_DISP.HOUR%10+'0';
+            timebuff[2]=':';
+            timebuff[3]=RTC_TIME_DISP.MIN/10+'0';
+            timebuff[4]=RTC_TIME_DISP.MIN%10+'0';
+            timebuff[5]=':';
+            timebuff[6]=RTC_TIME_DISP.SEC/10+'0';
+            timebuff[7]=RTC_TIME_DISP.SEC%10+'0';
+            timebuff[8]=0;
+            
+            WriteString_16(LIST1+360, 2, timebuff,  0);
+        }
+		
+		if(Disp_Flag==1)
+		{
+			Disp_List_comp(&Button_Page);	
+			Disp_Flag = 0;
+		}
+		
+
+		
+		key=HW_KeyScsn();
+		if(key==0xff)
+		{
+			keynum=0;
+		}
+		else
+			keynum++;
+			if(keynum==KEY_NUM)
+		{	
+			Disp_Flag=1;
+			Key_Beep();
+			switch(key)
+			{
+				case Key_F1:
+					switch(Button_Page.index)
+					{
+						case 0:
+							SetSystemStatus(SYS_STATUS_TEST);
+						break;					
+						default:
+						break;
+						
+					}
+					Savetoeeprom();
+				break;
+				case Key_F2:
+					switch(Button_Page.index)
+					{
+						case 0:
+						{
+							SetSystemStatus(SYS_STATUS_LOAD);
+						}break;
+						default:
+							break;
+
+					
+					}
+					Savetoeeprom();
+				break;
+				case Key_F3:
+					switch(Button_Page.index)
+					{
+						case 0:
+						{
+							SetSystemStatus(SYS_STATUS_POW);
+						}
+						default:
+						break;
+					
+					
+					}
+					Savetoeeprom();
+				break;
+				case Key_F4:
+					switch(Button_Page.index)
+					{
+						case 0:
+						SetSystemStatus(SYS_STATUS_LIST);
+							break;
+						default:
+							break;
+					
+					}	
+					Savetoeeprom();
+				break;
+				case Key_F5:
+					switch(Button_Page.index)
+					{
+						case 0:
+						SetSystemStatus(SYS_STATUS_SYSSET);
+							break;
+						default:
+							break;
+					
+					}	
+					Savetoeeprom();
+				break;
+				case Key_Disp:
+					if(mainswitch == 0)
+					{
+						SetSystemStatus(SYS_STATUS_TEST);
+					}
+				break;
+				case Key_SETUP:
+					if(mainswitch == 0)
+					{
+//						SetSystemStatus(SYS_STATUS_SETUPTEST);
+					}
+				break;
+				case Key_FAST:
+					
+				break;
+				case Key_LEFT:
+
+					if(Button_Page.index>8)
+					{
+						Button_Page.index -= 8;
+					}else{
+						Button_Page.index += 8;
+					}
+					
+				break;
+				case Key_RIGHT:
+
+					if(Button_Page.index>8)
+					{
+						Button_Page.index -= 8;
+					}else{
+						Button_Page.index += 8;
+					}	
+				break;
+				case Key_DOWN:
+					
+					if(Button_Page.index>11)
+					{
+						Button_Page.index = 0;
+					}else{
+						Button_Page.index ++;
+					}
+					
+				break;
+				case Key_UP:
+					
+					
+					if(Button_Page.index<1)
+					{
+						Button_Page.index = 12;
+					}else{
+						Button_Page.index --;
+					}
+					
+				break;
+				
+				case Key_NUM1:
+//					Send_Request(3,1);
+//				break;
+				case Key_NUM2:
+//					SaveData.Set_Bat.setvoltage += 10;
+//				break;
+				case Key_NUM3:
+//					SaveData.Set_Bat.setvoltage -= 10;
+//				break;
+				case Key_NUM4:					
+//				break;
+				case Key_NUM5:
+//					SaveData.Set_Bat.setvoltage += 100;
+//				break;
+				case Key_NUM6:
+//					SaveData.Set_Bat.setvoltage -= 100;
+//				break;
+				case Key_NUM7:
+//				break;
+				case Key_NUM8:
+//					Send_Request(12,0);
+//				break;
+				case Key_NUM9:
+//					SaveData.Set_Bat.setvoltage -= 1000;	
+//				break;
+				case Key_NUM0:
+//					Send_Request(3,0);
+//				break;
+				case Key_DOT:
+					switch(Button_Page.index)
+					{
+						case 1:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE;
+							Coordinates.lenth=76;
+							SaveSIM.VLOW=Disp_Set_Num(&Coordinates);
+
+						break;
+						case 2:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*1;
+							Coordinates.lenth=76;
+							SaveSIM.VHIGH=Disp_Set_Num(&Coordinates);
+
+						break;
+						case 3:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*2;
+							Coordinates.lenth=76;
+							SaveSIM.CLOW=Disp_Set_C(&Coordinates);
+						break;
+						case 4:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*3;
+							Coordinates.lenth=76;
+							SaveSIM.CHIGH = Disp_Set_C(&Coordinates);
+						break;
+						case 5:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*4;
+							Coordinates.lenth=76;
+							SaveSIM.RLOW = Disp_Set_R(&Coordinates);
+						break;
+						case 6:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*5;
+							Coordinates.lenth=76;
+							SaveSIM.RHIGH = Disp_Set_R(&Coordinates);
+						break;
+						case 7:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*6;
+							Coordinates.lenth=76;
+							SaveSIM.OCLOW=Disp_Set_C(&Coordinates);
+						break;
+						case 8:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*7;
+							Coordinates.lenth=76;
+							SaveSIM.OCHIGH = Disp_Set_C(&Coordinates);
+						break;
+						case 9:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE;
+							Coordinates.lenth=76;
+							SaveSIM.PVLOW=Disp_Set_Num(&Coordinates);
+
+						break;
+						case 10:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*1;
+							Coordinates.lenth=76;
+							SaveSIM.PVHIGH=Disp_Set_Num(&Coordinates);
+
+						break;
+						case 11:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*2;
+							Coordinates.lenth=76;
+							SaveSIM.PCLOW=Disp_Set_C(&Coordinates);
+						break;
+						case 12:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*3;
+							Coordinates.lenth=76;
+							SaveSIM.PCHIGH = Disp_Set_C(&Coordinates);
+						break;
+//						case 6:
+//							Coordinates.xpos=LIST2+88+32;
+//							Coordinates.ypos=FIRSTLINE+SPACE1*2;
+//							Coordinates.lenth=76;
+//								SaveSIM.LoadPT = Disp_Set_T(&Coordinates);
+//							Send_Request(4,1);
+//							break;
+						default:
+							break;					
+					
 					}
 					Savetoeeprom();
 				break;
@@ -1888,16 +2371,16 @@ void Test_Process(void)
                     switch(Button_Page.index)
 					{
 						case 0:
-//							Send_Request(2,1);
-//							SetSystemStatus(SYS_STATUS_TEST);
+							Send_Request(2,1);
+							SetSystemStatus(SYS_STATUS_TEST);
 						break;
 						case 1:
 						{
-							SaveSIM.resflag ++;
-							if(SaveSIM.resflag > 3)
-							{
-								SaveSIM.resflag = 0;
-							}
+//							SaveSIM.resflag ++;
+//							if(SaveSIM.resflag > 3)
+//							{
+//								SaveSIM.resflag = 0;
+//							}
 						}break;
 						case 4:
 
@@ -1932,7 +2415,7 @@ void Test_Process(void)
 					
 					
 					}
-					Savetoeeprom();
+//					Savetoeeprom();
 				break;
 				case Key_F3:
 					
@@ -2002,7 +2485,7 @@ void Test_Process(void)
 				case Key_SETUP:
 					if(mainswitch == 0)
 					{
-//						SetSystemStatus(SYS_STATUS_SETUPTEST);
+						SetSystemStatus(SYS_STATUS_COMP);
 					}
 				break;
 				case Key_FAST:
@@ -2084,7 +2567,7 @@ void Test_Process(void)
 							Coordinates.xpos=LIST1+88+16;
 							Coordinates.ypos=FIRSTLINE;
 							Coordinates.lenth=76;
-							SaveSIM.InitC=Disp_Set_Num(&Coordinates);
+							SaveSIM.InitC=Disp_Set_C(&Coordinates);
 							Send_Request(4,1);
 							break;
 						case 2:
@@ -2098,14 +2581,14 @@ void Test_Process(void)
 							Coordinates.xpos=LIST1+88+16;
 							Coordinates.ypos=FIRSTLINE+SPACE1*2;
 							Coordinates.lenth=76;
-							SaveSIM.ThresholdV=Disp_Set_C(&Coordinates);
+							SaveSIM.ThresholdV=Disp_Set_Num(&Coordinates);
 							Send_Request(4,1);
 							break;
 						case 4:
 							Coordinates.xpos=LIST2+88+32;
 							Coordinates.ypos=FIRSTLINE;
 							Coordinates.lenth=76;
-							SaveSIM.StepT = Disp_Set_T(&Coordinates);
+							SaveSIM.StepT = Disp_Set_ST(&Coordinates);
 							Send_Request(4,1);
 							break;
 //						case 6:
@@ -2461,42 +2944,42 @@ void Setup_Process(void)
 				case Key_DOT:					
 					switch(Button_Page.index)
 					{
-						case 1:
-							Coordinates.xpos=LIST1+88+16;
-							Coordinates.ypos=FIRSTLINE;
-							Coordinates.lenth=76;
-							SaveSIM.QuickV[0]=Disp_Set_Num(&Coordinates);
-							break;
-						case 2:
-							Coordinates.xpos=LIST1+88+16;
-							Coordinates.ypos=FIRSTLINE+SPACE1*1;
-							Coordinates.lenth=76;
-							SaveSIM.QuickV[1]=Disp_Set_Num(&Coordinates);
-							break;
-						case 3:
-							Coordinates.xpos=LIST1+88+16;
-							Coordinates.ypos=FIRSTLINE+SPACE1*2;
-							Coordinates.lenth=76;
-							SaveSIM.QuickV[2]=Disp_Set_Num(&Coordinates);
-							break;
-						case 4:
-							Coordinates.xpos=LIST2+88+16;
-							Coordinates.ypos=FIRSTLINE;
-							Coordinates.lenth=76;
-							SaveSIM.QuickV[3]=Disp_Set_Num(&Coordinates);
-							break;
-						case 5:
-							Coordinates.xpos=LIST2+88+16;
-							Coordinates.ypos=FIRSTLINE+SPACE1;
-							Coordinates.lenth=76;
-							SaveSIM.QuickV[4]=Disp_Set_Num(&Coordinates);
-							break;
-						case 6:
-							Coordinates.xpos=LIST2+88+16;
-							Coordinates.ypos=FIRSTLINE+SPACE1*2;
-							Coordinates.lenth=76;
-							SaveSIM.QuickV[5]=Disp_Set_Num(&Coordinates);
-							break;
+//						case 1:
+//							Coordinates.xpos=LIST1+88+16;
+//							Coordinates.ypos=FIRSTLINE;
+//							Coordinates.lenth=76;
+//							SaveSIM.QuickV[0]=Disp_Set_Num(&Coordinates);
+//							break;
+//						case 2:
+//							Coordinates.xpos=LIST1+88+16;
+//							Coordinates.ypos=FIRSTLINE+SPACE1*1;
+//							Coordinates.lenth=76;
+//							SaveSIM.QuickV[1]=Disp_Set_Num(&Coordinates);
+//							break;
+//						case 3:
+//							Coordinates.xpos=LIST1+88+16;
+//							Coordinates.ypos=FIRSTLINE+SPACE1*2;
+//							Coordinates.lenth=76;
+//							SaveSIM.QuickV[2]=Disp_Set_Num(&Coordinates);
+//							break;
+//						case 4:
+//							Coordinates.xpos=LIST2+88+16;
+//							Coordinates.ypos=FIRSTLINE;
+//							Coordinates.lenth=76;
+//							SaveSIM.QuickV[3]=Disp_Set_Num(&Coordinates);
+//							break;
+//						case 5:
+//							Coordinates.xpos=LIST2+88+16;
+//							Coordinates.ypos=FIRSTLINE+SPACE1;
+//							Coordinates.lenth=76;
+//							SaveSIM.QuickV[4]=Disp_Set_Num(&Coordinates);
+//							break;
+//						case 6:
+//							Coordinates.xpos=LIST2+88+16;
+//							Coordinates.ypos=FIRSTLINE+SPACE1*2;
+//							Coordinates.lenth=76;
+//							SaveSIM.QuickV[5]=Disp_Set_Num(&Coordinates);
+//							break;
 						default:
 							break;					
 					
@@ -3800,13 +4283,13 @@ void Use_SysSetProcess(void)
 						case 1:
 							break;
 						case 2:
-							Saveeeprom.Sys_set.key_board=0;
+							SaveSIM.beep = 0;
 							break;
 						case 3:
 							Saveeeprom.Sys_set.U_flag=0;
 							break;
 						case 4:
-							SaveData.Sys_Setup.Language=0;
+							SaveSIM.lang = 0;
 							break;
 //						case 5:
 //							SaveData.Sys_Setup.Password=1;
@@ -3954,19 +4437,19 @@ void Use_SysSetProcess(void)
 					switch(Button_Page.index)
 					{
 						case 0:
-							SetSystemStatus(SYS_STATUS_SETUPTEST);
+//							SetSystemStatus(SYS_STATUS_SETUPTEST);
 						//	SetSystemStatus(SYS_STATUS_SETUPTEST);
 							break;
 						case 1:
 							break;
 						case 2:
-							Saveeeprom.Sys_set.key_board=1;
+							SaveSIM.beep = 1;
 							break;
 						case 3:
 							Saveeeprom.Sys_set.U_flag=1;
 							break;
 						case 4:
-							SaveData.Sys_Setup.Language=1;
+							SaveSIM.lang = 1;
 							break;
 //						case 5:
 //							SaveData.Sys_Setup.Password=0;
@@ -4207,17 +4690,17 @@ void Use_SysSetProcess(void)
 				break;
 				case Key_SETUP:					
 					
-					 if(Button_Page.page==3)
-//						Uart_Send_Flag=5; 
-					 {
-						Exit_correction();
-						INSTRUCT_TO_DEBUG 
-						Exit_correction();
-						SetSystemStatus(SYS_STATUS_SETUPTEST);
-						 
-					 }
-					 else  if(Button_Page.page==0)
-						SetSystemStatus(SYS_STATUS_SETUPTEST); 
+//					 if(Button_Page.page==3)
+////						Uart_Send_Flag=5; 
+//					 {
+//						Exit_correction();
+//						INSTRUCT_TO_DEBUG 
+//						Exit_correction();
+//						SetSystemStatus(SYS_STATUS_SETUPTEST);
+//						 
+//					 }
+//					 else  if(Button_Page.page==0)
+						SetSystemStatus(SYS_STATUS_COMP); 
 
 				break;
 				case Key_FAST:
@@ -4662,6 +5145,7 @@ void Fac_DebugProcess(void)
     uint8_t debugbuff[20];
     uint8_t setupflag=0,sendnum;
     Disp_Coordinates_Typedef Coordinates;
+	Disp_Coordinates_Typedef Debug_Cood;
 //    uint8_t page=1;
 	uint8_t Disp_flag=1;
 	Button_Page_Typedef Button_Page;
@@ -4740,16 +5224,29 @@ void Fac_DebugProcess(void)
 					SetSystemStatus(SYS_STATUS_TEST);
 				break;
 				case Key_SETUP:
-					
+					if(Button_Page.index==0)
+                    {
+                        Debug_Cood.xpos=70;
+                        Debug_Cood.ypos =272-70;
+                        Debug_Cood.lenth=120;
+                        input_num(&Debug_Cood);
+                    
+                    }
 				break;
 				case Key_FAST:
 					
 				break;
 				case Key_LEFT:
-					
+					if(Button_Page.page == 1)
+					{//电压校正3档
+							Button_Page.index=1;
+					}
 				break;
 				case Key_RIGHT:
-					
+					if(Button_Page.page == 1)
+					{//电压校正3档
+							Button_Page.index=10;
+					}
 				break;
 				case Key_UP:
 					
@@ -4758,7 +5255,7 @@ void Fac_DebugProcess(void)
 						if(Button_Page.index>0)
 							Button_Page.index--;
 						else
-							Button_Page.index=7;
+							Button_Page.index=9;
 						
 
 					}else if(Button_Page.page == 2){//电流校准
@@ -4780,7 +5277,7 @@ void Fac_DebugProcess(void)
 					
 					if(Button_Page.page == 1)
 					{//电压校正3档
-						if(Button_Page.index>7)
+						if(Button_Page.index>9)
 							Button_Page.index=0;
 						else
 							Button_Page.index++;
@@ -5728,7 +6225,7 @@ Sort_TypeDef Disp_NumKeyboard_time(Disp_Coordinates_Typedef *Coordinates )
 		if(dispflag)
 		{
 			dispflag=0;
-			LCD_DrawRect( Coordinates->xpos, Coordinates->ypos,Coordinates->xpos+Coordinates->lenth+5 , Coordinates->ypos+16 , Red );
+			LCD_DrawRect( Coordinates->xpos, Coordinates->ypos,Coordinates->xpos+Coordinates->lenth , Coordinates->ypos+16 , Red );
 			Colour.Fword=White;
 			Colour.black=Red;
 			WriteString_16(Coordinates->xpos, Coordinates->ypos, Disp_buff,  0);
@@ -6128,7 +6625,7 @@ Sort_TypeDef Disp_NumKeyboard_Set(Disp_Coordinates_Typedef *Coordinates )
 		if(dispflag)
 		{
 			dispflag=0;
-			LCD_DrawRect( Coordinates->xpos, Coordinates->ypos,Coordinates->xpos+Coordinates->lenth+5 , Coordinates->ypos+16 , Red );
+			LCD_DrawRect( Coordinates->xpos, Coordinates->ypos,Coordinates->xpos+Coordinates->lenth , Coordinates->ypos+16 , Red );
 			Colour.Fword=White;
 			Colour.black=Red;
 			WriteString_16(Coordinates->xpos, Coordinates->ypos, Disp_buff,  0);
@@ -6216,9 +6713,9 @@ Sort_TypeDef Disp_Set_C(Disp_Coordinates_Typedef *Coordinates)
 	Disp_button_Num_A();
 	Sort_num=Disp_NumKeyboard_Set(Coordinates);
 	Sort_num1=Time_Set_Cov(&Sort_num);
-	if(Sort_num1.Num>10000)
+	if(Sort_num1.Num>30000)
 	{
-		Sort_num1.Num = 10000;
+		Sort_num1.Num = 30000;
 	}
 	if(Sort_num1.Updata_flag==0)
 	{
@@ -6232,10 +6729,80 @@ Sort_TypeDef Disp_Set_C(Disp_Coordinates_Typedef *Coordinates)
 
 }
 
+
 Sort_TypeDef Disp_Set_T(Disp_Coordinates_Typedef *Coordinates)
 {
 	Sort_TypeDef Sort_num,Sort_num1;
 	Disp_button_Num_ms();
+	Sort_num=Disp_NumKeyboard_time(Coordinates);
+	Sort_num1=Time_Set_Cot(&Sort_num);
+	Sort_num1.Num /= 1000;
+//	if(Sort_num1.Num>200)
+//	{
+//		Sort_num1.Num = 200;
+//	}
+	if(Sort_num1.Updata_flag==0)
+	{
+		Sort_num1.Dot=0;
+		Sort_num1.Num=0;
+		Sort_num1.Unit=0;
+	
+	}
+		
+	return Sort_num1;
+
+}
+
+Sort_TypeDef Disp_Set_ST(Disp_Coordinates_Typedef *Coordinates)
+{
+	Sort_TypeDef Sort_num,Sort_num1;
+	Disp_button_Num_mms();
+	Sort_num=Disp_NumKeyboard_time(Coordinates);
+	Sort_num1=Time_Set_Cot(&Sort_num);
+	Sort_num1.Num /= 1000;
+//	if(Sort_num1.Num>200)
+//	{
+//		Sort_num1.Num = 200;
+//	}
+	if(Sort_num1.Updata_flag==0)
+	{
+		Sort_num1.Dot=0;
+		Sort_num1.Num=0;
+		Sort_num1.Unit=0;
+	
+	}
+		
+	return Sort_num1;
+
+}
+
+Sort_TypeDef Disp_Set_R(Disp_Coordinates_Typedef *Coordinates)
+{
+	Sort_TypeDef Sort_num,Sort_num1;
+	Disp_button_Num_r();
+	Sort_num=Disp_NumKeyboard_time(Coordinates);
+	Sort_num1=Time_Set_Cot(&Sort_num);
+	Sort_num1.Num /= 1000;
+//	if(Sort_num1.Num>200)
+//	{
+//		Sort_num1.Num = 200;
+//	}
+	if(Sort_num1.Updata_flag==0)
+	{
+		Sort_num1.Dot=0;
+		Sort_num1.Num=0;
+		Sort_num1.Unit=0;
+	
+	}
+		
+	return Sort_num1;
+
+}
+
+Sort_TypeDef Disp_Set_Step(Disp_Coordinates_Typedef *Coordinates)
+{
+	Sort_TypeDef Sort_num,Sort_num1;
+	Disp_button_Num_step();
 	Sort_num=Disp_NumKeyboard_time(Coordinates);
 	Sort_num1=Time_Set_Cot(&Sort_num);
 	Sort_num1.Num /= 1000;
@@ -6699,6 +7266,14 @@ void Soft_Turnon(void)
 		
 
 }
+void Comp_Led(void)
+{
+	if(Comp_flag==0)
+		Pass_Led();
+	else
+		Fail_led();
+}
+
 void Test_Comp_Fmq(void)//Comp_flag==1不合格
 {
 	if(Comp_flag==0)
@@ -7242,7 +7817,7 @@ void input_num(Disp_Coordinates_Typedef *Coordinates )
                     dispflag=0;
                     for(i=0;i<8;i++)
                     {
-                        Saveeeprom.fac_num[i]=Disp_buff[i];
+                        SaveSIM.fac_num[i]=Disp_buff[i];
                     
                     }
                     Savetoeeprom();

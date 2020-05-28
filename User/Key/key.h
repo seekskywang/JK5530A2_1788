@@ -50,7 +50,7 @@ void Beep_on(void);
 void Beep_Off(void);
 void Pass_Led(void);
 void Fail_led(void);
-
+void Comp_ledoff(void);
 void Lock_LedOn(void);
 void Lock_LedOff(void);
 void Lock_Control_Off(void);

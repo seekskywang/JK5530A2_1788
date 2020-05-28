@@ -124,6 +124,16 @@ void Fail_led(void)
    
 
 }
+
+void Comp_ledoff(void)
+{
+	
+	
+	GPIO_ClearValue(5, (1<<4));
+	GPIO_ClearValue(1, (1<<2));
+   
+
+}
 void Power_On_led(void)
 {
 	GPIO_SetValue(0, (1<<10));
@@ -388,7 +398,7 @@ void Delay_Key(void)
 }
 void Key_Beep(void)
 {
-    if(Saveeeprom.Sys_set.key_board)
+    if(SaveSIM.beep)
 	Beep_on();
 	Delay(20);
 	Beep_Off();

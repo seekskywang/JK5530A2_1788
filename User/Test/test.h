@@ -27,6 +27,7 @@ void Test_Process(void);
 void Load_Process(void);
 void Pow_Process(void);
 void List_Process(void);
+void Comp_Process(void);
 //文件管理程序
 void File_Process(void);
 
@@ -52,7 +53,11 @@ Sort_TypeDef Disp_NumKeyboard_Set(Disp_Coordinates_Typedef *Disp_Coordinates);
 Sort_TypeDef Disp_NumKeyboard_time(Disp_Coordinates_Typedef *Disp_Coordinates);
 Sort_TypeDef Disp_Set_Num(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_C(Disp_Coordinates_Typedef *Coordinates);
+Sort_TypeDef Disp_Set_C2(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_T(Disp_Coordinates_Typedef *Coordinates);
+Sort_TypeDef Disp_Set_ST(Disp_Coordinates_Typedef *Coordinates);
+Sort_TypeDef Disp_Set_R(Disp_Coordinates_Typedef *Coordinates);
+Sort_TypeDef Disp_Set_Step(Disp_Coordinates_Typedef *Coordinates);
 uint8_t Freq_Set_Num(Disp_Coordinates_Typedef *Coordinates);
 uint8_t Avg_Set_Num(Disp_Coordinates_Typedef *Coordinates);//平均数设置
 Sort_TypeDef Disp_Set_InputNum(Disp_Coordinates_Typedef *Coordinates);
@@ -63,6 +68,7 @@ void Set_Compbcd_float(void);
 uint8_t Test_Comp(All_Compvalue_Typedef *pt);
 void Soft_Turnon(void);
 void Test_Comp_Fmq(void);
+void Comp_Led(void);
 uint8_t Uart3_Process(void);
 
 

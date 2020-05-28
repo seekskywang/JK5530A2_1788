@@ -56,6 +56,7 @@ void Disp_ListScreen(void);
 
 void ListHandle(void);
 void Disp_List_Item(void);
+void Disp_Comp_Item(void);
 void Disp_Pow_Item(void);
 void Disp_Load_Item(void);
 void Disp_Test_Item(void);//测量显示主菜单的项目显示
@@ -78,6 +79,7 @@ void Disp_Fastbutton(void);
 void Disp_Button_value1(uint32_t value);
 void Disp_Button_TestSet(uint32_t value);
 void  Disp_Button_List(void);
+void  Disp_Button_Res(void);
 void DispSet_value(Button_Page_Typedef* Button_Page);	//测量设置的设置参数值
 void Disp_Test_value(Button_Page_Typedef* Button_Page); // 测量显示中的设置值
 void Disp_RangeDispValue(Button_Page_Typedef *Button_Page);//档计数显示ON 或 OFF测试时档号显示界面的显示
@@ -87,6 +89,9 @@ void Disp_button_Num_time(void);
 void Disp_button_Num_V(void);
 void Disp_button_Num_A(void);
 void Disp_button_Num_ms(void);
+void Disp_button_Num_mms(void);
+void Disp_button_Num_r(void);
+void Disp_button_Num_step(void);
 void Disp_button_Num_Freq(void);
 Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time);
 Sort_TypeDef Freq_Set_Cov(Sort_TypeDef *Freq);
@@ -99,6 +104,7 @@ void Disp_Button_Fun_Set(uint16_t xpos,uint16_t ypos,uint8_t * Disp_Item,Button_
 void Disp_LimitSEt_value(Button_Page_Typedef* Button_Page);//极限设置按键值
 void Disp_List_Res(Button_Page_Typedef* Button_Page);
 void Disp_Correction_Set(Button_Page_Typedef* Button_Page);//校正设置
+void Disp_Warning(uint8_t num);
 
 void Disp_Cp_D(void);
 void Disp_Cp_Q(void);
@@ -139,11 +145,13 @@ void Disp_LIMIT_ComDispValue(Button_Page_Typedef *Button_Page);
 void Disp_List_value(Button_Page_Typedef* Button_Page);
 void Disp_Load_value(Button_Page_Typedef* Button_Page);
 void Disp_Pow_value(Button_Page_Typedef* Button_Page);
+void Disp_List_comp(Button_Page_Typedef* Button_Page);
 void Disp_Scan_Compvalue(uint8_t set);
 void Disp_Scan_SetCompvalue(Button_Page_Typedef* Button_Page);
 void Disp_Button_ItemScanSet(uint32_t value);
 void Disp_Button_ItemScan_no(void);
-void Send_Request(uint8_t x,uint8_t req);
+void  Disp_Button_List_Main(void);
+
 uint16_t SerialRemoteHandleL(uint8_t len,char* buf);
 void Disp_Set_Unit_12(uint32_t unit,uint32_t x,uint32_t y);
 void Disp_Set_Unit_16(uint32_t unit,uint32_t x,uint32_t y);

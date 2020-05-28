@@ -177,7 +177,7 @@ extern uint8_t busyflag;
 extern uint8_t ptflag;
 extern struct MODS_T g_tModS;
 extern uint8_t g_mods_timeout;
-extern uint16_t listcol[6];
+extern uint16_t listcol[7];
 extern uint16_t listrow[6];
 extern uint16_t listNo;	
 extern uint32_t startdelay;
@@ -332,18 +332,25 @@ typedef struct
 	Sort_TypeDef Secondvalue;
 	Sort_TypeDef Vmvalue;
 	Sort_TypeDef Imvalue;
+	Sort_TypeDef PVmvalue;
+	Sort_TypeDef PImvalue;
 	Sort_TypeDef Pvalue;
 	Sort_TypeDef LoadV;
 	Sort_TypeDef LoadC;
 	Sort_TypeDef PowV;
 	Sort_TypeDef PowC;
 	Sort_TypeDef RValue;
+	Sort_TypeDef R1Value;
+	Sort_TypeDef R2Value;
 	Sort_TypeDef OCValue;
 	Sort_TypeDef ShortT;
 	Sort_TypeDef LOADCAP[16];
 	Sort_TypeDef POWCAP[16];
 	Sort_TypeDef RES1[15];//结果1
 	Sort_TypeDef RES2[15];//结果2
+	Sort_TypeDef RES3[15];//结果3
+	Sort_TypeDef RES4[15];//结果4
+	Sort_TypeDef COMP[15];//分选结果
 //	Sort_TypeDef OCRES[15];
 //	Sort_TypeDef SHORTRES[15];
 	Sort_TypeDef liststep;
@@ -532,21 +539,32 @@ typedef struct
 	Sort_TypeDef PARA2[15];//参数2
 	Sort_TypeDef COFFV[15];//截止电压
 	Sort_TypeDef COFFC[15];//截止电流
+	Sort_TypeDef TIME[15];//截止电流
+	Sort_TypeDef VHIGH;
+	Sort_TypeDef VLOW;
+	Sort_TypeDef PVHIGH;
+	Sort_TypeDef PVLOW;
+	Sort_TypeDef CHIGH;
+	Sort_TypeDef CLOW;
+	Sort_TypeDef PCHIGH;
+	Sort_TypeDef PCLOW;
+	Sort_TypeDef RHIGH;
+	Sort_TypeDef RLOW;
+	Sort_TypeDef OCHIGH;
+	Sort_TypeDef OCLOW;
 	
 	
-	
-	
-	
-	
-    Sort_TypeDef QuickV[6];//快捷电压值
-	Sort_TypeDef LoadPT;//放电	保护时间
-	uint8_t qvflag;//快捷电压选项
-	Sort_TypeDef CALV[7];//测量电压校准
+//    Sort_TypeDef QuickV[6];//快捷电压值
+//	Sort_TypeDef LoadPT;//放电	保护时间
+//	uint8_t qvflag;//快捷电压选项
+	Sort_TypeDef CALV[10];//测量电压校准
 	Sort_TypeDef CTRLV[8];//控制电压校准
 	Sort_TypeDef CALI[9];//测量电流校准
-	uint8_t resflag;//微调分辨率
+//	uint8_t resflag;//微调分辨率
 	uint8_t jkflag;
-	
+	uint8_t beep;
+	uint8_t lang;
+	uint8_t fac_num[10];
 	
 	
 }SaveSet;
@@ -602,7 +620,7 @@ typedef struct
 extern Send_Mainord_Typedef Send_Mainord;
 extern uint8_t usb_oenflag;
 extern uint8_t softswitch;
-
+extern uint8_t buttonpage;
 //extern Disp_Coordinates_Typedef Disp_Coordinates;
 //==========================================================
 //系统项(2项)
@@ -693,6 +711,7 @@ extern float LVL_DA;
 extern uint16_t LVDISP;
 extern uint8_t ocfinish;
 extern float bc_raw;
+extern uint32_t cdctime;
 extern uint8_t jumpflag;
 //extern  uint16_t Voltage;//测试电压
 //extern  uint16_t Current;//测试电流
@@ -726,6 +745,7 @@ enum SysStatusEnum
 	SYS_STATUS_LOAD,			//程控负载测试
 	SYS_STATUS_POW,			//程控电源测试
 	SYS_STATUS_LIST,			//列表测试
+	SYS_STATUS_COMP,
 	SYS_STATUS_RANGE ,		//档号显示
 	SYS_STATUS_RANGECOUNT,	//档计数显示
 	SYS_STATUS_ITEM ,			//列表扫描显示
@@ -784,6 +804,8 @@ void LoadDefaultSystem(void);//加载默认系统值
 void LoadDefaultConfig(void);//加载默认配置值
 void LoadDefaultCalibrate(void);//加载默认校准值
 void ReadSaveData(void);//读取保存参数
+void RecHandle(void);
+void Send_Request(uint8_t x,uint8_t req);
 //void WriteSaveData(void);//写入保存参数
 
 #define SetSystemStatus(status) (SystemStatus=status)
