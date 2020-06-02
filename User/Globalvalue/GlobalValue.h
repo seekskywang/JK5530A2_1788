@@ -558,7 +558,7 @@ typedef struct
 //	Sort_TypeDef LoadPT;//放电	保护时间
 //	uint8_t qvflag;//快捷电压选项
 	Sort_TypeDef CALV[10];//测量电压校准
-	Sort_TypeDef CTRLV[8];//控制电压校准
+	Sort_TypeDef CTRLV[10];//控制电压校准
 	Sort_TypeDef CALI[9];//测量电流校准
 //	uint8_t resflag;//微调分辨率
 	uint8_t jkflag;

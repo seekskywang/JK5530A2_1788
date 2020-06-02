@@ -23,6 +23,7 @@ uint8_t ocfinish;
 uint32_t LVSUM;
 uint32_t LCSUM;
 uint32_t PCSUM;
+uint32_t IRSUM;
 uint32_t R1SUM;
 uint32_t R2SUM;
 uint16_t listcol[7] = {40,80,160,240,320,400,479};
@@ -317,7 +318,9 @@ const uint8_t Fac_ICalitem[][14+1]=
 	{"R1L   "},
 	{"R1H   "},
 	{"R2L	"},
-	{"R2H   "}
+	{"R2H   "},
+	{"IRH3  "},
+	{"IRH4  "},
 };
 
 const uint8_t CtrV_Calitem[][14+1]=
@@ -5843,9 +5846,13 @@ void Disp_FacrCheck_Item(Button_Page_Typedef* Button_Page)
 			WriteString_16(0, 26+i*22, CtrV_Calitem[i],  0);		
 		}
 	}else if(Button_Page->page == 3){
-		for(i=0;i<8;i++)
+		for(i=0;i<9;i++)
 		{
 			WriteString_16(0, 26+i*22, Fac_ICalitem[i],  0);		
+		}
+		for(i=0;i<1;i++)
+		{
+			WriteString_16(200, 26+i*22, Fac_ICalitem[i+9],  0);		
 		}
 	}
 	
@@ -5936,7 +5943,12 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page)
 			Colour.black=LCD_COLOR_TEST_BACK;
 			LCD_DrawRect(80, 26+i*22,172 ,26+i*22+16 , Colour.black ) ;
 		}
-		for(i=0;i<8;i++)
+		for(i=0;i<1;i++)
+		{
+			Colour.black=LCD_COLOR_TEST_BACK;
+			LCD_DrawRect(80+200, 26+i*22,172+200 ,26+i*22+16 , Colour.black ) ;
+		}
+		for(i=0;i<9;i++)
 		{
 			Black_Select=(Button_Page->index==(i+1))?1:0;
 			if(Black_Select)
@@ -5951,6 +5963,22 @@ void Disp_FacCal(Button_Page_Typedef* Button_Page)
 			LCD_DrawRect(80, 26+i*22,156 ,26+i*22+16 , Colour.black ) ;
 			WriteString_16(80, 26+i*22, DispBuf,  0);		
 			WriteString_16(80+76, 26+i*22, "",  1);
+		}
+		for(i=0;i<1;i++)
+		{
+			Black_Select=(Button_Page->index==(i+10))?1:0;
+			if(Black_Select)
+			{
+				Colour.black=LCD_COLOR_SELECT;
+			}
+			else
+			{
+				Colour.black=LCD_COLOR_TEST_BACK;
+			}
+			Hex_Format(SaveSIM.CTRLV[i+9].Num,3,5,0);
+			LCD_DrawRect(80+200, 26+i*22,156+200 ,26+i*22+16 , Colour.black ) ;
+			WriteString_16(80+200, 26+i*22, DispBuf,  0);		
+			WriteString_16(80+76+200, 26+i*22, "",  1);
 		}
 	}
 	Disp_Fastbutton();
@@ -7895,7 +7923,7 @@ void Disp_Testvalue(uint8_t siwtch)
 		Hex_Format(Test_Dispvalue.LoadV.Num, 3 , 5 , 0);//ÏÔÊ¾µçÑ¹
 		WriteString_Big(130-40-40,95 ,DispBuf);
 		
-		if(Test_Dispvalue.RValue.Num == 0)
+		if(Test_Dispvalue.RValue.Num > 2000)
 		{
 			WriteString_Big(130-40-40,95+55 ," -----");
 		}else{
@@ -8653,7 +8681,7 @@ void Send_Request(u8 x,u8 req)
 		}break;
 		case 14:
 		{
-			sprintf(buf,"%d%05d",req-1,SaveSIM.CTRLV[req-1].Num);
+			sprintf(buf,"%d%05d",req-1,SaveSIM.CTRLV[req-1].Num*10);
 			strcat(USART_RX_BUF,buf);
 			len+=5;
 		}break;
@@ -8842,10 +8870,10 @@ uint16_t SerialRemoteHandleL(uint8_t len,char* buf)
 					PCSUM += temp1;
 				}else{
 					Test_Dispvalue.PowC.Num = PCSUM/30;
-//					if(Test_Dispvalue.PowC.Num < 300)
-//					{
-//						Test_Dispvalue.PowC.Num = 0;
-//					}
+					if(Test_Dispvalue.PowC.Num < 30)
+					{
+						Test_Dispvalue.PowC.Num = 0;
+					}
 					PCSUM = 0;
 				}
 				
@@ -8857,7 +8885,18 @@ uint16_t SerialRemoteHandleL(uint8_t len,char* buf)
 						temp1 = temp1*10+(buf[currCharNum++]-0x30);
 					}
 				}
-				Test_Dispvalue.RValue.Num = temp1;
+//				Test_Dispvalue.RValue.Num = temp1;
+				if(sumcount < 30)
+				{
+					IRSUM += temp1;
+				}else{
+					Test_Dispvalue.RValue.Num = IRSUM/30;
+//					if(Test_Dispvalue.RValue.Num < 30)
+//					{
+//						Test_Dispvalue.RValue.Num = 0;
+//					}
+					IRSUM = 0;
+				}
 				
 				temp1 = 0;
 				if(buf[currCharNum++] == ',')

@@ -5240,12 +5240,17 @@ void Fac_DebugProcess(void)
 					if(Button_Page.page == 1)
 					{//电压校正3档
 							Button_Page.index=1;
+					}else if(Button_Page.page == 3){//电流测量
+						Button_Page.index=1;
+						
 					}
 				break;
 				case Key_RIGHT:
 					if(Button_Page.page == 1)
 					{//电压校正3档
 							Button_Page.index=10;
+					}else if(Button_Page.page == 3){//电流测量
+						Button_Page.index=10;
 					}
 				break;
 				case Key_UP:
@@ -5269,7 +5274,7 @@ void Fac_DebugProcess(void)
 						if(Button_Page.index>0)
 							Button_Page.index--;
 						else
-							Button_Page.index=8;
+							Button_Page.index=9;
 						
 					}
 				break;
@@ -5291,7 +5296,7 @@ void Fac_DebugProcess(void)
 						
 						
 					}else if(Button_Page.page == 3){//
-						if(Button_Page.index>8)
+						if(Button_Page.index>9)
 							Button_Page.index=0;
 						else
 							Button_Page.index++;
