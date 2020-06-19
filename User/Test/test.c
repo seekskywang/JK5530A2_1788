@@ -16,6 +16,8 @@
 #include 	"use_disp.h"
 #include "lpc177x_8x_rtc.h"
 #include "open.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 const char *PASSWORD="12345789";
 uint8_t  Avg_Test_Main[25][6];
@@ -192,10 +194,7 @@ void Power_Process(void)
 	Pass_Led();
 	Power_Off_led();
 //	#ifdef DISP_JK
-	if(SaveSIM.jkflag)
-	{
-		lcd_image((uint8_t *)gImage_open);
-	}
+	
 //	#endif
 	InitGlobalValue();//初始化全局变量
 	init_timer(0, 2);//定时器初始化
@@ -203,6 +202,10 @@ void Power_Process(void)
 	enable_timer(0);
 	
 	ReadSavedata();
+	if(SaveSIM.jkflag)
+	{
+		lcd_image((uint8_t *)gImage_open);
+	}
 	Set_Compbcd_float();
 	READ_COMP();
 	i=0;//显示延时
@@ -1203,7 +1206,7 @@ void List_Process(void)
 	buttonpage = 0;
 	lcd_Clear(LCD_COLOR_TEST_BACK);
 	Disp_List_Item();
-
+	Send_Request(2,3);//列表测试模式
 	while(GetSystemStatus()==SYS_STATUS_LIST)
 	{
 		if(Rtc_intflag)
@@ -1259,6 +1262,20 @@ void List_Process(void)
 							jumpflag = 1;
 						}
 					}
+				}else if(listcap == 5){//NTC测试
+					cdctime ++;
+					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+					{
+						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+						{
+							jumpflag = 1;
+						}
+					}else{
+						if(cdctime == 3)
+						{
+							jumpflag = 1;
+						}
+					}
 				}
 			}else{
 				bc_raw = 0;
@@ -1297,7 +1314,10 @@ void List_Process(void)
 					Button_Page.page = 5;
 					Disp_Button_Res();
 					Disp_List_Res(&Button_Page);
-					Comp_Led();
+					if(SaveSIM.Comp == 1)
+					{
+						Comp_Led();
+					}
 				}
 			}
 			if(USART_RX_STA&0x8000)	   //判断是否接收完数据
@@ -1346,6 +1366,7 @@ void List_Process(void)
 						switch(Button_Page.index)
 						{
 							case 0:
+								if(listswitch == 0)
 								SetSystemStatus(SYS_STATUS_TEST);
 							break;
 							case 2:
@@ -1387,6 +1408,7 @@ void List_Process(void)
 							{
 								case 0:
 								{
+									if(listswitch == 0)
 									SetSystemStatus(SYS_STATUS_LOAD);
 								}break;
 								case 2:
@@ -1427,6 +1449,7 @@ void List_Process(void)
 							{
 								case 0:
 								{
+									if(listswitch == 0)
 									SetSystemStatus(SYS_STATUS_POW);
 								}
 								break;
@@ -1453,8 +1476,11 @@ void List_Process(void)
 							}
 						}
 					}else if(Button_Page.page == 4){
-						Button_Page.page = 5;
-						Disp_Button_Res();
+						if(listswitch == 0)
+						{
+							Button_Page.page = 5;
+							Disp_Button_Res();
+						}
 					}else if(Button_Page.page > 4){
 						if(SaveSIM.ListNum.Num > 5)
 						{
@@ -1508,6 +1534,7 @@ void List_Process(void)
 							}
 						}
 					}else if(Button_Page.page == 4){
+						if(listswitch == 0)
 						Button_Page.page = 1;
 						
 					}else if(Button_Page.page > 4){
@@ -1535,19 +1562,21 @@ void List_Process(void)
 							listswitch = 1;
 							mainswitch = 1;
 							startdelay = 100;
-							if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2)
-							{
-								Test_Dispvalue.RES1[Test_Dispvalue.liststep.Num] = Test_Dispvalue.RValue;
-								Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.Vmvalue;
-							}
+							Test_Dispvalue.LVRES = Test_Dispvalue.Vmvalue;
+							Test_Dispvalue.IRRES = Test_Dispvalue.Rmvalue;
+//							if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2)
+//							{
+//								Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num] = Test_Dispvalue.Rmvalue;
+//								Test_Dispvalue.RES1[Test_Dispvalue.liststep.Num] = Test_Dispvalue.Vmvalue;
+//							}
 						}else{
 							listswitch = 0;
 							mainswitch = 0;
 							if(listcap == 1)
 							{
-								Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.LOADCAP[0];
+								Test_Dispvalue.RES4[Test_Dispvalue.liststep.Num] = Test_Dispvalue.LOADCAP[0];
 							}else if(listcap == 2){
-								Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.POWCAP[0];
+								Test_Dispvalue.RES4[Test_Dispvalue.liststep.Num] = Test_Dispvalue.POWCAP[0];
 							}
 							listcap = 0;
 							Test_Dispvalue.liststep.Num = 0;
@@ -1558,13 +1587,13 @@ void List_Process(void)
 					}
 				break;
 				case Key_Disp:
-					if(mainswitch == 0)
+					if(listswitch == 0)
 					{
 						SetSystemStatus(SYS_STATUS_TEST);
 					}
 				break;
 				case Key_SETUP:
-					if(mainswitch == 0)
+					if(listswitch == 0)
 					{
 						SetSystemStatus(SYS_STATUS_COMP);
 					}
@@ -2022,26 +2051,26 @@ void Comp_Process(void)
 				break;
 				case Key_LEFT:
 
-					if(Button_Page.index>8)
+					if(Button_Page.index>9)
 					{
-						Button_Page.index -= 8;
+						Button_Page.index -= 9;
 					}else{
-						Button_Page.index += 8;
+						Button_Page.index += 9;
 					}
 					
 				break;
 				case Key_RIGHT:
 
-					if(Button_Page.index>8)
+					if(Button_Page.index>9)
 					{
-						Button_Page.index -= 8;
+						Button_Page.index -= 9;
 					}else{
-						Button_Page.index += 8;
+						Button_Page.index += 9;
 					}	
 				break;
 				case Key_DOWN:
 					
-					if(Button_Page.index>11)
+					if(Button_Page.index>17)
 					{
 						Button_Page.index = 0;
 					}else{
@@ -2054,7 +2083,7 @@ void Comp_Process(void)
 					
 					if(Button_Page.index<1)
 					{
-						Button_Page.index = 12;
+						Button_Page.index = 18;
 					}else{
 						Button_Page.index --;
 					}
@@ -2143,30 +2172,66 @@ void Comp_Process(void)
 							SaveSIM.OCHIGH = Disp_Set_C(&Coordinates);
 						break;
 						case 9:
+							Coordinates.xpos=LIST1+88+16+16;
+							Coordinates.ypos=FIRSTLINE+SPACE1*8;
+							Coordinates.lenth=76;
+							SaveSIM.STLOW = Disp_Set_ST(&Coordinates);
+						break;
+						case 10:
 							Coordinates.xpos=LIST2+88+16+1;
 							Coordinates.ypos=FIRSTLINE;
 							Coordinates.lenth=76;
 							SaveSIM.PVLOW=Disp_Set_Num(&Coordinates);
 
 						break;
-						case 10:
+						case 11:
 							Coordinates.xpos=LIST2+88+16+1;
 							Coordinates.ypos=FIRSTLINE+SPACE1*1;
 							Coordinates.lenth=76;
 							SaveSIM.PVHIGH=Disp_Set_Num(&Coordinates);
 
 						break;
-						case 11:
+						case 12:
 							Coordinates.xpos=LIST2+88+16+1;
 							Coordinates.ypos=FIRSTLINE+SPACE1*2;
 							Coordinates.lenth=76;
 							SaveSIM.PCLOW=Disp_Set_C(&Coordinates);
 						break;
-						case 12:
+						case 13:
 							Coordinates.xpos=LIST2+88+16+1;
 							Coordinates.ypos=FIRSTLINE+SPACE1*3;
 							Coordinates.lenth=76;
 							SaveSIM.PCHIGH = Disp_Set_C(&Coordinates);
+						break;
+						case 14:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*4;
+							Coordinates.lenth=76;
+							SaveSIM.R1LOW = Disp_Set_NTCR(&Coordinates);
+						break;
+						case 15:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*5;
+							Coordinates.lenth=76;
+							SaveSIM.R1HIGH = Disp_Set_NTCR(&Coordinates);
+						break;
+						case 16:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*6;
+							Coordinates.lenth=76;
+							SaveSIM.R2LOW = Disp_Set_NTCR(&Coordinates);
+						break;
+						case 17:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*7;
+							Coordinates.lenth=76;
+							SaveSIM.R2HIGH = Disp_Set_NTCR(&Coordinates);
+						break;
+						case 18:
+							Coordinates.xpos=LIST2+88+16+1;
+							Coordinates.ypos=FIRSTLINE+SPACE1*8;
+							Coordinates.lenth=76;
+							SaveSIM.STHIGH = Disp_Set_ST(&Coordinates);
 						break;
 //						case 6:
 //							Coordinates.xpos=LIST2+88+32;
@@ -2241,7 +2306,7 @@ void Test_Process(void)
 	uint8_t Disp_Flag=1;
     uint8_t timebuff[10];
 	static uint8_t TrigFlag=0;
-	static uint8_t timecount;
+	static uint16_t timecount;
 	Send_Ord_Typedef Uart;
 	const uint8_t DISP_UnitMain[]=
 	{ 0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,2,2,3,3,2,2,2};
@@ -2285,16 +2350,50 @@ void Test_Process(void)
             timebuff[8]=0;
             
             WriteString_16(LIST1+360, 2, timebuff,  0);
-			if(Test_Dispvalue.LoadV.Num > SaveSIM.ThresholdV.Num)
+			
+        }
+		if(SaveSIM.Rraly == 1)//锁定低量程
+		{
+			if(Test_Dispvalue.LoadV.Num > SaveSIM.ThresholdV.Num 
+			&& Test_Dispvalue.RValue.Num <= 200 
+			&& ocfinish == 0 && mainswitch == 0)//开始测试条件判断
 			{
 				timecount ++;
-				if(timecount > 1 && ocfinish == 0)
+				if(timecount > 30*(2-SaveSIM.testmode))//快速和精准等待时间区分
 				{
-					
+					Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+					Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+					Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+					Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+					mainswitch = 1;
+					Send_Request(3,mainswitch);
 				}
+			}else{
+				timecount = 0;
+				Comp_flag = 0;
+				
 			}
-        }
-		
+		}else{//锁定高量程/自动
+			if(Test_Dispvalue.LoadV.Num > SaveSIM.ThresholdV.Num 
+			&& Test_Dispvalue.RValue.Num <= 2000 
+			&& ocfinish == 0 && mainswitch == 0)//开始测试条件判断
+			{
+				timecount ++;
+				if(timecount > 30*(2-SaveSIM.testmode))//快速和精准等待时间区分
+				{
+					Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+					Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+					Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+					Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+					mainswitch = 1;
+					Send_Request(3,mainswitch);
+				}
+			}else{
+				timecount = 0;
+				Comp_flag = 0;
+				
+			}
+		}
 //        sprintf((char *)DispBuf,"%2d-%2d-%2d",RTC_TIME_DISP.HOUR,RTC_TIME_DISP.MIN,RTC_TIME_DISP.SEC);
 //        WriteString_16(LIST1+360, 2, DispBuf,  0);
 		if(Disp_Flag==1)
@@ -2345,15 +2444,22 @@ void Test_Process(void)
 		Disp_Big_MainUnit(Test_Dispvalue.Unit[0],DISP_UnitMain[SaveData.Main_Func.Param.test]);//显示单位
 //			Test_Dispvalue.Secondvalue.Dot=3;
 		Disp_Big_SecondUnit(0,1);//副参数单位
-		Disp_Testvalue(1);			//显示测量值
+		
+		if(ocfinish == 0)//过流测试结束标志位判断显示实时数据还是结果
+		{
+			Comp_ledoff();
+			Disp_Testvalue(1);			//显示测量值
+		}else{
+			Disp_IRTEST_Res();
+		}
 		
 		Disp_switch();
-		All_LedOff1();
+//		All_LedOff1();
 //        Uart3_Process();
 //		else
 //			Disp_Usbflag(0);  
 		 
-	  key=HW_KeyScsn();
+		key=HW_KeyScsn();
 		if(key==0xff)
 		{
 			keynum=0;
@@ -2470,9 +2576,16 @@ void Test_Process(void)
 					Savetoeeprom();
 				break;
 				case Key_F5:
-					if(mainswitch == 0)
+					if(mainswitch == 0)//手动开始测试
 					{
-						mainswitch = 1;
+						if(Test_Dispvalue.LoadV.Num > SaveSIM.ThresholdV.Num)
+						{
+							mainswitch = 1;
+							Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+							Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+							Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+							Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+						}
 					}else{
 						mainswitch = 0;
 					}
@@ -4286,7 +4399,7 @@ void Use_SysSetProcess(void)
 							SaveSIM.beep = 0;
 							break;
 						case 3:
-							Saveeeprom.Sys_set.U_flag=0;
+							SaveSIM.alarm=0;
 							break;
 						case 4:
 							SaveSIM.lang = 0;
@@ -4295,6 +4408,7 @@ void Use_SysSetProcess(void)
 //							SaveData.Sys_Setup.Password=1;
 //							break;
 						case 5:
+							SaveSIM.testmode = 0;
 							break;
 						case 6:
 							if(RTC_TIME_DISP.YEAR<1)
@@ -4329,13 +4443,11 @@ void Use_SysSetProcess(void)
 //						case 10:
 //							break ;
 						case 9:
-							if(Saveeeprom.Sys_set.buard<1)
-								Saveeeprom.Sys_set.buard=5;
-							else
-								Saveeeprom.Sys_set.buard--;
+							SaveSIM.Rraly = 0;
+							Send_Request(4,1);
 							break;
 						case 10:
-							SaveData.Sys_Setup.Bias=0;
+							SaveSIM.Comp=0;
 							break;
 						case 11:
 							SaveData.Sys_Setup.Bus_Mode=0;
@@ -4446,7 +4558,7 @@ void Use_SysSetProcess(void)
 							SaveSIM.beep = 1;
 							break;
 						case 3:
-							Saveeeprom.Sys_set.U_flag=1;
+							SaveSIM.alarm=1;
 							break;
 						case 4:
 							SaveSIM.lang = 1;
@@ -4455,6 +4567,7 @@ void Use_SysSetProcess(void)
 //							SaveData.Sys_Setup.Password=0;
 //							break;
 						case 5:
+							SaveSIM.testmode = 1;
 							break;
 						case 6:
 							if(RTC_TIME_DISP.YEAR>RTC_YEAR_MAX)
@@ -4489,13 +4602,10 @@ void Use_SysSetProcess(void)
 //						case 9:
 //							break ;							
 						case 9:
-							if(Saveeeprom.Sys_set.buard>4)
-								Saveeeprom.Sys_set.buard=0;
-							else
-								Saveeeprom.Sys_set.buard++;
-							break;
+							SaveSIM.Rraly = 1;
+							Send_Request(4,1);
 						case 10:
-							SaveData.Sys_Setup.Bias=1;
+							SaveSIM.Comp=1;
 							break;
 						case 11:
 							SaveData.Sys_Setup.Bus_Mode=1;
@@ -4608,6 +4718,11 @@ void Use_SysSetProcess(void)
 					if(Button_Page.page==0)
 					switch(Button_Page.index)
 					{
+						case 9:
+						{
+							SaveSIM.Rraly = 2;
+							Send_Request(4,1);
+						}break;
 						case 11:
 							SaveData.Sys_Setup.Bus_Mode=2;
 							
@@ -4731,7 +4846,7 @@ void Use_SysSetProcess(void)
 					if(Button_Page.page==0)
 					{
 						if(Button_Page.index<6)
-							Button_Page.index = 14;
+							Button_Page.index = 9;
 						else if(Button_Page.index<8)	//Button_Page.index==7||Button_Page.index==8
 							Button_Page.index+=1;
 						else if(Button_Page.index==14||Button_Page.index==15)
@@ -4750,7 +4865,7 @@ void Use_SysSetProcess(void)
 					{
 						if(Button_Page.index>15)
 							Button_Page.index=0;
-						else if(Button_Page.index<8)
+						else if(Button_Page.index<10)
 							Button_Page.index++;
 						else if(Button_Page.index==14)
 							Button_Page.index++;
@@ -4781,14 +4896,14 @@ void Use_SysSetProcess(void)
 					{
 						if(Button_Page.index<1)
 							Button_Page.index=16;
-						else if(Button_Page.index<9)
+						else if(Button_Page.index<11)
 							Button_Page.index--;
 						else if(Button_Page.index==16)
 							Button_Page.index--;
 						else if(Button_Page.index==15)
 							Button_Page.index--;
 						else if(Button_Page.index==14)
-							Button_Page.index=8;
+							Button_Page.index=10;
 				    }
 					else if(Button_Page.page==1)
 					{
@@ -5328,11 +5443,11 @@ void Fac_DebugProcess(void)
 					Coordinates.lenth=80;
 					if(Button_Page.page == 1)
 					{
-						SaveSIM.CALV[Button_Page.index-1]=Disp_Set_Num(&Coordinates);
+						Test_Dispvalue.CALV[Button_Page.index-1]=Disp_Set_Num(&Coordinates);
 					}else if(Button_Page.page == 2){
-						SaveSIM.CALI[Button_Page.index-1]=Disp_Set_C(&Coordinates);
+						Test_Dispvalue.CALI[Button_Page.index-1]=Disp_Set_C(&Coordinates);
 					}else if(Button_Page.page == 3){
-						SaveSIM.CTRLV[Button_Page.index-1]=Disp_Set_T(&Coordinates);
+						Test_Dispvalue.CTRLV[Button_Page.index-1]=Disp_Set_T(&Coordinates);
 					}
 					Savetoeeprom();
 					
@@ -5893,7 +6008,422 @@ Sort_TypeDef Input_compvalue(Disp_Coordinates_Typedef *Coordinates)
 		
 	return Sort_set;
 }
+//数字键输入显示
+Sort_TypeDef Disp_NumKeyboard_NTC(Disp_Coordinates_Typedef *Coordinates )
+{
+	double numconvert;
+	uint8_t While_flag=1;
+	uint8_t Disp_buff[10]={"         ",};
+	uint8_t key,i;
+	uint8_t dispflag=1;
+	uint8_t dot_num=0,dot_num1=0;
+	uint8_t page=0;
+	uint32_t keynum=0;
+	uint8_t key_count=0;
+//	uint32_t Num[6]={1,10,100,1e3,1e4,1e5};
+	Sort_TypeDef   Sort_set;
+	Sort_set.Dot=0;
+	Sort_set.Num=0;
+	Sort_set.Unit=0;
+	Sort_set.Num=0;
+//	for(i=0;i<6;i++)
+//	Disp_buff[i]=' ';
+	Disp_buff[7]=0;
 	
+	while(While_flag)
+	{
+		key=HW_KeyScsn();
+		if(key==0xff)
+		{
+			keynum=0;
+		}
+		else
+			keynum++;
+		if(keynum==5)
+		{
+			dispflag=1;
+			Key_Beep();
+			switch(key)
+			{
+				case Key_F1:
+					
+//					if(page==0)
+//						Sort_set.Unit=0;
+//					else
+//						Sort_set.Unit=5;
+//					While_flag=0;
+//					if(key_count<NUM_LENTH)
+//					{
+//						if(dot_num==0)
+//						{
+//							if(key_count>0)
+//							{
+//								Disp_buff[key_count]='.';
+//								dot_num1=key_count;
+//								key_count++;
+//							
+//							
+//							}
+//							dot_num++;
+//						}
+//					
+//					}
+//					
+//					Sort_set.Updata_flag=1;
+					if(page==0)
+						Sort_set.Unit=1;
+					else
+						Sort_set.Unit=6;
+					While_flag=0;
+					if(key_count<5)
+					{
+//						if(dot_num==0)
+//						{
+//							if(key_count>0)
+//							{
+//								Disp_buff[key_count]='.';
+//								dot_num1=key_count;
+//								key_count++;
+//							
+//							
+//							}
+//							dot_num++;
+//						}
+					
+					}
+					Sort_set.Updata_flag=1;
+					
+				break;
+				case Key_F2:
+					
+					
+				break;
+				case Key_F3:
+					
+					if(page==0)
+						Sort_set.Unit=2;
+					else
+						Sort_set.Unit=8;
+					While_flag=0;
+					if(key_count<NUM_LENTH)
+					{
+						if(dot_num==0)
+						{
+							if(key_count>0)
+							{
+								Disp_buff[key_count]='.';
+								dot_num1=key_count;
+								key_count++;
+							}
+							dot_num++;
+						}
+					
+					}
+					Sort_set.Updata_flag=1;
+				break;
+				case Key_F4:
+					
+					if(page==0)
+						Sort_set.Unit=3;
+					else
+						Sort_set.Unit=7;
+					While_flag=0;
+					if(key_count<NUM_LENTH)
+					{
+						if(dot_num==0)
+						{
+							if(key_count>0)
+							{
+								Disp_buff[key_count]='.';
+								dot_num1=key_count;
+								key_count++;
+							
+							
+							}
+							dot_num++;
+						}
+					
+					}
+					Sort_set.Updata_flag=1;
+				break;
+				case Key_F5:
+					
+					if(page==0)
+						page=1;
+					else
+					page=0;
+				break;
+				case Key_Disp:
+					
+					SetSystemStatus(SYS_STATUS_TEST);
+					While_flag=0;
+					Sort_set.Updata_flag=0;
+				break;
+				case Key_SETUP:
+					
+					While_flag=0;
+					Sort_set.Updata_flag=0;
+				SetSystemStatus(SYS_STATUS_SETUPTEST);
+				break;
+				case Key_FAST:
+					
+				break;
+				case Key_LEFT:
+					
+				break;
+				case Key_RIGHT:
+					
+				break;
+				case Key_UP:
+					
+				break;
+				case Key_DOWN:
+					
+				break;
+				case Key_NUM1:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='1';
+						
+						
+							
+						
+						key_count++;
+							
+					}
+				break;
+				case Key_NUM2:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='2';
+						key_count++;
+					}
+				break;
+				case Key_NUM3:
+					 
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='3';
+						key_count++;
+					}
+				break;
+				case Key_NUM4:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='4';
+						key_count++;
+					}
+					
+				break;
+				case Key_NUM5:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='5';
+						key_count++;
+					}
+				break;
+				case Key_NUM6:
+					 
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='6';
+						key_count++;
+					}
+				break;
+				case Key_NUM7:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='7';
+						key_count++;
+					}
+				break;
+				case Key_NUM8:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='8';
+						key_count++;
+					}
+				break;
+				case Key_NUM9:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='9';
+						key_count++;
+					}
+				break;
+				case Key_NUM0:
+					
+					if(key_count<NUM_LENTH)
+					{
+						Disp_buff[key_count]='0';
+						key_count++;
+					}
+				break;
+				case Key_DOT:
+					
+					if(key_count<NUM_LENTH&&key_count>0)
+					{
+						if(dot_num==0)
+						{
+							if(key_count>0)
+							{
+								Disp_buff[key_count]='.';
+								dot_num1=key_count;
+								key_count++;
+							
+							
+							}
+							dot_num++;
+						}
+					}
+//					else 
+//					{
+//						if(Disp_buff[key_count]==0)
+//							Disp_buff[key_count]='-';
+//						else if(Disp_buff[key_count]=='-')
+//							Disp_buff[key_count]='+';
+//						else
+//							Disp_buff[key_count]='-';
+//						key_count++;
+//							
+//					
+//					
+//					
+//					
+//					}
+				break;
+				case Key_BACK:
+					
+					if(key_count>0)
+					{	key_count--;
+						Disp_buff[key_count]=' ';
+						if(dot_num1==key_count)
+						{
+							dot_num=0;
+							dot_num1=0;							
+						}
+					
+					}
+					else
+					{
+						if(Disp_buff[key_count]==0)
+								Disp_buff[key_count]='-';
+							else if(Disp_buff[key_count]=='-')
+								Disp_buff[key_count]='+';
+							else
+								Disp_buff[key_count]='-';
+							key_count++;
+					}
+				break;
+				case Key_LOCK:
+					
+				break;
+				case Key_BIAS:
+					
+				break;
+				case Key_REST:
+					
+				break;
+				case Key_TRIG:
+					
+				break;
+				default:
+					
+				break;
+					
+			}
+		
+		
+		}
+		if(dispflag)
+		{
+			dispflag=0;
+			LCD_DrawRect( Coordinates->xpos, Coordinates->ypos,Coordinates->xpos+Coordinates->lenth , Coordinates->ypos+16 , Red );
+			Colour.Fword=White;
+			Colour.black=Red;
+			WriteString_16(Coordinates->xpos, Coordinates->ypos, Disp_buff,  0);
+			//dispflag=0;
+		}
+	
+	}
+//	for(i=key_count;i<4;i++)
+//		Disp_buff[i]='0';
+	if(dot_num==0)
+	{
+		if(key_count>0)
+		{
+			Disp_buff[key_count]='.';
+			dot_num1=key_count;
+			key_count++;
+		}
+		dot_num++;
+		Disp_buff[key_count] = '0';
+	}
+	
+	numconvert = atof(Disp_buff);
+	Sort_set.Num = (int)(numconvert * 10);
+	
+//	for(i=0;i<4;i++)
+//	{
+//		if(Disp_buff[0]>='0'&&(Disp_buff[0]<='9'))
+//		{
+//			if(Disp_buff[i]>='0'&&(Disp_buff[i]<='9'))
+//			{
+//			
+//				if(dot_num1>i)
+//				{
+//					Sort_set.Num*=10;
+//					Sort_set.Num+=Disp_buff[i]-'0';
+//				
+//				}
+//				else
+//				{
+//					Sort_set.Num*=10;
+//					Sort_set.Num+=Disp_buff[i]-'0';				
+//					
+//				}
+//			}
+//			
+//			
+//			//Sort_set.Num+=(Disp_buff[key_count-1]-'0');
+//		
+//		
+//		}
+//	
+//	
+//	
+//	}
+	Sort_set.Dot=dot_num1;
+//	if(Disp_buff[0]>='0'&&(Disp_buff[0]<'9'))
+//		{
+//			if(Disp_buff[key_count-1]!='.')		
+//			{
+//				Sort_set.Num*=Num[key_count-dot_num-1];
+//				Sort_set.Num+=(Disp_buff[key_count-1]-'0');//*Num[key_count-dot_num-1];
+//				
+//			}				
+//			//*(Disp_buff[key_count-1]-'0'))+=Num[key_count-dot_num-1];
+//			else
+//			{
+//			
+//			}
+//		
+//		
+//		}
+//			
+//		else 
+//			;//(Disp_buff[key_count-1]-'0')*Sort_set.Num+=Num[key_count-dot_num-2];
+	return Sort_set;
+
+}
+
 //数字键输入显示
 Sort_TypeDef Disp_NumKeyboard_time(Disp_Coordinates_Typedef *Coordinates )
 {
@@ -6009,7 +6539,7 @@ Sort_TypeDef Disp_NumKeyboard_time(Disp_Coordinates_Typedef *Coordinates )
 				case Key_F4:
 					
 					if(page==0)
-						Sort_set.Unit=3;
+							Sort_set.Unit=3;
 					else
 						Sort_set.Unit=7;
 					While_flag=0;
@@ -6785,13 +7315,13 @@ Sort_TypeDef Disp_Set_R(Disp_Coordinates_Typedef *Coordinates)
 {
 	Sort_TypeDef Sort_num,Sort_num1;
 	Disp_button_Num_r();
-	Sort_num=Disp_NumKeyboard_time(Coordinates);
-	Sort_num1=Time_Set_Cot(&Sort_num);
-	Sort_num1.Num /= 1000;
-//	if(Sort_num1.Num>200)
-//	{
-//		Sort_num1.Num = 200;
-//	}
+	Sort_num=Disp_NumKeyboard_NTC(Coordinates);
+//	Sort_num1=Time_Set_Cot(&Sort_num);
+	Sort_num1.Num = Sort_num.Num/10;
+	if(Sort_num1.Num>2000)
+	{
+		Sort_num1.Num = 2000;
+	}
 	if(Sort_num1.Updata_flag==0)
 	{
 		Sort_num1.Dot=0;
@@ -6799,6 +7329,33 @@ Sort_TypeDef Disp_Set_R(Disp_Coordinates_Typedef *Coordinates)
 		Sort_num1.Unit=0;
 	
 	}
+		
+	return Sort_num1;
+
+}
+
+Sort_TypeDef Disp_Set_NTCR(Disp_Coordinates_Typedef *Coordinates)
+{
+	Sort_TypeDef Sort_num,Sort_num1;
+	Disp_button_Num_ntcr();
+	Sort_num=Disp_NumKeyboard_NTC(Coordinates);
+//	Sort_num1=Time_Set_Cov(&Sort_num);
+	Sort_num1.Num = Sort_num.Num;
+	if(Sort_num1.Num>1000)
+	{
+		Sort_num1.Num = 1000;
+	}
+	if(Sort_num1.Updata_flag==0)
+	{
+		Sort_num1.Dot=0;
+		Sort_num1.Num=0;
+		Sort_num1.Unit=0;
+	
+	}
+//	if(Sort_num1.Num>200)
+//	{
+//		Sort_num1.Num = 200;
+//	}
 		
 	return Sort_num1;
 
@@ -7274,9 +7831,15 @@ void Soft_Turnon(void)
 void Comp_Led(void)
 {
 	if(Comp_flag==0)
+	{
 		Pass_Led();
-	else
+	}else{
 		Fail_led();
+		if(SaveSIM.alarm)
+		{
+			Beep_on();
+		}
+	}
 }
 
 void Test_Comp_Fmq(void)//Comp_flag==1不合格

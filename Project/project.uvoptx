@@ -119,6 +119,10 @@
       <TargetDriverDllRegistry>
         <SetRegEntry>
           <Number>0</Number>
+          <Key>DLGUARM</Key>
+        </SetRegEntry>
+        <SetRegEntry>
+          <Number>0</Number>
           <Key>PWSTATINFO</Key>
           <Name>200,50,700</Name>
         </SetRegEntry>
@@ -370,16 +374,6 @@
           <WinNumber>1</WinNumber>
           <ItemText>str</ItemText>
         </Ww>
-        <Ww>
-          <count>41</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>cdctime,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>42</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>jumpflag</ItemText>
-        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -525,107 +519,72 @@
         <Ww>
           <count>28</count>
           <WinNumber>2</WinNumber>
-          <ItemText>temperature,0x0A</ItemText>
+          <ItemText>DMADest_Buffer</ItemText>
         </Ww>
         <Ww>
           <count>29</count>
           <WinNumber>2</WinNumber>
-          <ItemText>DMADest_Buffer</ItemText>
+          <ItemText>DispBuf</ItemText>
         </Ww>
         <Ww>
           <count>30</count>
           <WinNumber>2</WinNumber>
-          <ItemText>g_tModS.TxCount</ItemText>
+          <ItemText>DispBuf</ItemText>
         </Ww>
         <Ww>
           <count>31</count>
           <WinNumber>2</WinNumber>
-          <ItemText>Irange</ItemText>
+          <ItemText>Button_Page.index</ItemText>
         </Ww>
         <Ww>
           <count>32</count>
           <WinNumber>2</WinNumber>
-          <ItemText>DispBuf</ItemText>
+          <ItemText>SaveSIM.ITEM</ItemText>
         </Ww>
         <Ww>
           <count>33</count>
           <WinNumber>2</WinNumber>
-          <ItemText>DispBuf</ItemText>
+          <ItemText>Test_Dispvalue,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>34</count>
           <WinNumber>2</WinNumber>
-          <ItemText>Button_Page.index</ItemText>
+          <ItemText>timecount</ItemText>
         </Ww>
         <Ww>
           <count>35</count>
           <WinNumber>2</WinNumber>
-          <ItemText>SaveSIM.ITEM</ItemText>
+          <ItemText>Test_Dispvalue.PowV,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>36</count>
           <WinNumber>2</WinNumber>
-          <ItemText>Test_Dispvalue,0x0A</ItemText>
+          <ItemText>Sort_num1.Num,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>37</count>
           <WinNumber>2</WinNumber>
-          <ItemText>mainswitch</ItemText>
+          <ItemText>timecount,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>38</count>
           <WinNumber>2</WinNumber>
-          <ItemText>timecount</ItemText>
+          <ItemText>Sort_num1.Num</ItemText>
         </Ww>
         <Ww>
           <count>39</count>
           <WinNumber>2</WinNumber>
-          <ItemText>Test_Dispvalue.PowV,0x0A</ItemText>
+          <ItemText>Sort_num,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>40</count>
           <WinNumber>2</WinNumber>
-          <ItemText>SaveSIM.CTRLV,0x0A</ItemText>
+          <ItemText>Sort_set.Num,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>41</count>
           <WinNumber>2</WinNumber>
-          <ItemText>Sort_num1.Num,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>42</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>listdelay,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>43</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>Test_Dispvalue.OCValue.Num,0x0A</ItemText>
-        </Ww>
-        <Ww>
-          <count>44</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>mainswitch</ItemText>
-        </Ww>
-        <Ww>
-          <count>45</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>startdelay</ItemText>
-        </Ww>
-        <Ww>
-          <count>46</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>listswitch</ItemText>
-        </Ww>
-        <Ww>
-          <count>47</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>listcap</ItemText>
-        </Ww>
-        <Ww>
-          <count>48</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>listcap</ItemText>
+          <ItemText>Disp_buff</ItemText>
         </Ww>
       </WatchWindow2>
       <Tracepoint>

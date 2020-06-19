@@ -158,6 +158,9 @@
 
 #define DISP_UNIT_XPOS	370-8-30
 #define DISP_UNIT_YPOS	92
+
+//显示刷新滤波次数
+#define DISP_FILTER		20
 //==========================================================
 //标题长度
 #define TITLE_LEN_MAX		(8)
@@ -248,7 +251,7 @@ typedef struct
 	uint32_t Dot;
 	uint32_t Unit;
 	uint32_t Updata_flag;
-	uint32_t Order;
+//	uint32_t Order;
 }Sort_TypeDef;
 typedef struct
 {
@@ -332,6 +335,7 @@ typedef struct
 	Sort_TypeDef Secondvalue;
 	Sort_TypeDef Vmvalue;
 	Sort_TypeDef Imvalue;
+	Sort_TypeDef Rmvalue;
 	Sort_TypeDef PVmvalue;
 	Sort_TypeDef PImvalue;
 	Sort_TypeDef Pvalue;
@@ -362,8 +366,13 @@ typedef struct
 	
 	uint8_t Dot[4];
 	uint8_t Unit[4];
-	
-
+	Sort_TypeDef CALV[10];//测量电压校准
+	Sort_TypeDef CTRLV[10];//控制电压校准
+	Sort_TypeDef CALI[9];//测量电流校准
+	Sort_TypeDef LVRES;
+	Sort_TypeDef IRRES;
+	Sort_TypeDef R1RES;
+	Sort_TypeDef R2RES;
 
 }Test_Dispvalue_TypeDef;
 extern Test_Dispvalue_TypeDef Test_Dispvalue; 
@@ -557,16 +566,25 @@ typedef struct
 //    Sort_TypeDef QuickV[6];//快捷电压值
 //	Sort_TypeDef LoadPT;//放电	保护时间
 //	uint8_t qvflag;//快捷电压选项
-	Sort_TypeDef CALV[10];//测量电压校准
-	Sort_TypeDef CTRLV[10];//控制电压校准
-	Sort_TypeDef CALI[9];//测量电流校准
+//	Sort_TypeDef CALV[10];//测量电压校准
+//	Sort_TypeDef CTRLV[10];//控制电压校准
+//	Sort_TypeDef CALI[9];//测量电流校准
 //	uint8_t resflag;//微调分辨率
 	uint8_t jkflag;
 	uint8_t beep;
 	uint8_t lang;
 	uint8_t fac_num[10];
+	uint8_t testmode;
+	uint8_t alarm;
 	
-	
+	Sort_TypeDef R1HIGH;
+	Sort_TypeDef R1LOW;
+	Sort_TypeDef R2HIGH;
+	Sort_TypeDef R2LOW;
+	Sort_TypeDef STHIGH;
+	Sort_TypeDef STLOW;
+	uint8_t Rraly;
+	uint8_t Comp;
 }SaveSet;
 
 extern SaveSet SaveSIM;

@@ -131,7 +131,7 @@ void Comp_ledoff(void)
 	
 	GPIO_ClearValue(5, (1<<4));
 	GPIO_ClearValue(1, (1<<2));
-   
+    Beep_Off();
 
 }
 void Power_On_led(void)

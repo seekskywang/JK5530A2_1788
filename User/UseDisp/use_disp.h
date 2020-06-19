@@ -91,6 +91,7 @@ void Disp_button_Num_A(void);
 void Disp_button_Num_ms(void);
 void Disp_button_Num_mms(void);
 void Disp_button_Num_r(void);
+void Disp_button_Num_ntcr(void);
 void Disp_button_Num_step(void);
 void Disp_button_Num_Freq(void);
 Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time);
@@ -130,6 +131,7 @@ void Disp_R_X(void);
 void Disp_Rs_Q(void);
 void Disp_Rp_Q(void);
 void Disp_Testvalue(uint8_t siwtch);//œ‘ æ≤‚ ‘ ˝æ›
+void Disp_IRTEST_Res(void);
 void Disp_Big_MainUnit(uint8_t unit,uint8_t unit1);
 void Disp_Big_SecondUnit(uint8_t unit,uint8_t unit1);
 void Send_Freq(Send_Ord_Typedef *ord);
