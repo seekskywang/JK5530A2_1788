@@ -585,6 +585,7 @@ typedef struct
 	Sort_TypeDef STLOW;
 	uint8_t Rraly;
 	uint8_t Comp;
+	Sort_TypeDef LoopDelay;//Ñ­»·´ÎÊý
 }SaveSet;
 
 extern SaveSet SaveSIM;

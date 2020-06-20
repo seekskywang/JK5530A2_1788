@@ -1607,12 +1607,9 @@ void List_Process(void)
 						Button_Page.index=4;
 					}
 					else if(Button_Page.index<=4){
-						if(Button_Page.index<=2)
+						if(Button_Page.index>2)
 						{
 							Button_Page.index-=2;
-						}
-						else{
-							Button_Page.index+=2;
 						}
 					}else if(Button_Page.index>4){
 						if(Button_Page.index<1)
@@ -1704,7 +1701,7 @@ void List_Process(void)
 						
 					}
 					else{
-						if(Button_Page.index == 2 || Button_Page.index == 3)
+						if(Button_Page.index == 2 || Button_Page.index == 4)
 						{
 							Button_Page.index = 5;
 						}else{
@@ -1781,8 +1778,22 @@ void List_Process(void)
 								Coordinates.ypos=FIRSTLINE;
 								Coordinates.lenth=76;
 								SaveSIM.ListNum=Disp_Set_Step(&Coordinates);
-								List_Process();
-								break;
+//								List_Process();
+							break;
+							case 3:
+								Coordinates.xpos=LIST2+88+32;
+								Coordinates.ypos=FIRSTLINE;
+								Coordinates.lenth=73;
+								SaveSIM.Loop=Disp_Set_Step(&Coordinates);
+//								List_Process();
+							break;
+							case 4:
+								Coordinates.xpos=LIST2+88+32;;
+								Coordinates.ypos=FIRSTLINE+SPACE1;
+								Coordinates.lenth=73;
+								SaveSIM.LoopDelay=Disp_Set_Step(&Coordinates);
+//								List_Process();
+							break;
 	//						case 2:
 	//							Coordinates.xpos=LIST1+88+16;
 	//							Coordinates.ypos=FIRSTLINE+SPACE1*1;
@@ -2747,7 +2758,7 @@ void Test_Process(void)
 					
 				break;
 				case Key_TRIG:
-					Send_Request(3,1);
+//					Send_Request(3,1);
 				break;
 				default:
 					
@@ -7248,9 +7259,9 @@ Sort_TypeDef Disp_Set_C(Disp_Coordinates_Typedef *Coordinates)
 	Disp_button_Num_A();
 	Sort_num=Disp_NumKeyboard_Set(Coordinates);
 	Sort_num1=Time_Set_Cov(&Sort_num);
-	if(Sort_num1.Num>30000)
+	if(Sort_num1.Num>75000)
 	{
-		Sort_num1.Num = 30000;
+		Sort_num1.Num = 70000;
 	}
 	if(Sort_num1.Updata_flag==0)
 	{

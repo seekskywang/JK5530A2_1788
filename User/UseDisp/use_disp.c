@@ -166,8 +166,8 @@ const uint8_t Test_Setitem[][14+1]=
 	{"步进电流  :"},
 	{"门槛电压  :"},
 	{"步进时间    :"},
-	{"过流值      :"},
-    {"放电保护时间:"},
+//	{"过流值      :"},
+//    {"放电保护时间:"},
 	
 //	{"Vm:"},
 //	{"Im:"},
@@ -248,10 +248,8 @@ const uint8_t List_Setitem[][14+1]=
 {
 	{"列表步数  :"},
 	{"步进模式  :"},
-	{""},
-	{"循环测试  :"},
-	{""},
-	{""},
+	{"循环次数  :"},
+	{"循环间隔  :"},
 	
 };
 
@@ -259,10 +257,8 @@ const uint8_t List_Setitem_E[][14+1]=
 {
 	{"List Steps :"},
 	{"Step Mode  :"},
-	{"  :"},
-	{"Loop Test  :"},
-	{""},
-	{""},
+	{"Loop Time  :"},
+	{"Loop Delay :"},
 	
 };
 
@@ -2250,7 +2246,7 @@ void Disp_Test_Item(void)
 	
 	Colour.Fword=White;
 	Colour.black=LCD_COLOR_TEST_BACK;
-	for(i=0;i<6;i++)
+	for(i=0;i<4;i++)
 	{
 		if(i<3)
 		{
@@ -2396,9 +2392,9 @@ void Disp_List_Item(void)
 	
 	Colour.Fword=White;
 	Colour.black=LCD_COLOR_TEST_BACK;
-	for(i=0;i<6;i++)
+	for(i=0;i<4;i++)
 	{
-		if(i<3)
+		if(i<2)
 		{
 			if(SaveData.Sys_Setup.Language == 1)
 			{
@@ -2410,10 +2406,10 @@ void Disp_List_Item(void)
 		}else{
 			if(SaveData.Sys_Setup.Language == 1)
 			{
-				WriteString_16(250,26+(i-3)*22, List_Setitem_E[i],  0);
+				WriteString_16(250,26+(i-2)*22, List_Setitem_E[i],  0);
 				
 			}else if(SaveData.Sys_Setup.Language == 0){
-				WriteString_16(250,26+(i-3)*22, List_Setitem[i],  0);
+				WriteString_16(250,26+(i-2)*22, List_Setitem[i],  0);
 			}
 			
 		}
@@ -3906,11 +3902,24 @@ void Disp_List_value(Button_Page_Typedef* Button_Page)
 	{
 		Colour.black=LCD_COLOR_TEST_BACK;
 	}
-	
+	Hex_Format(SaveSIM.Loop.Num,0,3,0);
 	LCD_DrawRect(LIST2+87+32, FIRSTLINE-2,SELECT_2END ,FIRSTLINE+SPACE1-4 , Colour.black ) ;
-	WriteString_16(LIST2+87+32,FIRSTLINE, Loop_Test[SaveSIM.LoopTest],  0);
+	WriteString_16(LIST2+87+32,FIRSTLINE, DispBuf,  0);
 	
+	//	循环间隔
+	Black_Select=(Button_Page->index==4)?1:0;
+	if(Black_Select)
+	{
+		Colour.black=LCD_COLOR_SELECT;
 	
+	}
+	else
+	{
+		Colour.black=LCD_COLOR_TEST_BACK;
+	}
+	Hex_Format(SaveSIM.Loop.Num,0,3,0);
+	LCD_DrawRect(LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END ,FIRSTLINE+SPACE1*2-4, Colour.black ) ;
+	WriteString_16(LIST2+87+32,FIRSTLINE+SPACE1, DispBuf,  0);
 	
 	if((SaveSIM.ListNum.Num/5+1) > Button_Page->page)
 	{
@@ -4010,12 +4019,12 @@ void Disp_List_value(Button_Page_Typedef* Button_Page)
 					}
 				break;
 				case 3:
-					Colour.Fword=White;
-					Colour.black=LCD_COLOR_TEST_BUTON;
-					for(i=0;i<2;i++)
-					{
-						WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,Loop_Test[i],  0);
-					}
+//					Colour.Fword=White;
+//					Colour.black=LCD_COLOR_TEST_BUTON;
+//					for(i=0;i<2;i++)
+//					{
+//						WriteString_16(BUTTOM_X_VALUE+i*BUTTOM_MID_VALUE+4, BUTTOM_Y_VALUE,Loop_Test[i],  0);
+//					}
 				break;
 				default:
 			
@@ -7032,9 +7041,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 	{
 		if(Time->Unit==0)//单位是毫秒
 		{
-			if(Time->Num>60000)//大于60.000  显示60.000
+			if(Time->Num>75000)//大于60.000  显示60.000
 			{
-				Time->Num=60000;
+				Time->Num=75000;
 				Time->Dot=3;
 			}
 			else
@@ -7162,9 +7171,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>60000)//
+			if(Time->Num>75000)//
 			{
-				Time->Num=60000;
+				Time->Num=75000;
 			
 			}
 //			else if(Time->Num>=10000)//xx.xxx时显示xx.xxx
@@ -7228,9 +7237,9 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		}
 		else//单位是秒
 		{
-			if(Time->Num>60000)
+			if(Time->Num>75000)
 			{
-				Time->Num=60000;//加一位显示
+				Time->Num=75000;//加一位显示
 				Time->Dot=3;
 				Time->Unit=1;
 				
@@ -7315,11 +7324,11 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 		if(Time->Unit==0)//单位为毫秒时
 		{
 			
-			if(Time->Num>60000)//xxxx.x时 显示最高位xxx
+			if(Time->Num>75000)//xxxx.x时 显示最高位xxx
 			{
 				
 				{
-					Time->Num=60000;	
+					Time->Num=75000;	
 					Time->Dot=3;//因为是毫秒  所以没有小数点
 					Time->Unit=1;
 				}
@@ -7363,7 +7372,7 @@ Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time)
 	else
 	{
 	
-		Time->Num=60000;
+		Time->Num=75000;
 		Time->Dot=3;
 		Time->Unit=1;
 	
@@ -8260,40 +8269,42 @@ void Disp_Testvalue(uint8_t siwtch)
 			WriteString_Big(130-40-40,95+55 ,DispBuf);
 		}
 		
-		Colour.black=LCD_COLOR_TEST_BACK;
+		Colour.black=LCD_COLOR_TEST_MID;
+		WriteString_16(350,117-20, "过流",  0);//增加算法  把顺序改过来
 		Hex_Format(Test_Dispvalue.OCValue.Num,3,5,0);
-		LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+8 , FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
-		WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
-		WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1, "A",  1);
+		LCD_DrawRect( 400-16, 117-20,479, 147-20 , Colour.black ) ;//SPACE1
+		WriteString_16(400-16,117-20, DispBuf,  0);//增加算法  把顺序改过来
+		WriteString_16(450, 117-20, "A",  1);
 		
-		Hex_Format(Test_Dispvalue.ShortT.Num,0,3,0);		
-		LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1*2-2,SELECT_2END+9,FIRSTLINE+SPACE1*3-4, Colour.black ) ;//SPACE1
-		WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
-		WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1*2, "ms",  1);
+		Hex_Format(Test_Dispvalue.ShortT.Num,0,3,0);
+		WriteString_16(350,117-20+22, "保护",  0);//增加算法  把顺序改过来		
+		LCD_DrawRect( 400-16, 117-20+22,479, 147-20+22 , Colour.black ) ;//SPACE1
+		WriteString_16(400-16,117-20+22, DispBuf,  0);//增加算法  把顺序改过来
+		WriteString_16(450, 117-20+22, "ms",  1);
 		
 		Colour.black=LCD_COLOR_TEST_MID;
-		WriteString_16(380-20,150-20, "R1",  0);//增加算法  把顺序改过来
+		WriteString_16(380-20,150-20+33, "R1",  0);//增加算法  把顺序改过来
 		if(Test_Dispvalue.R1Value.Num > 1000)
 		{
-			WriteString_16(400-16,150-20, " ----",  0);
+			WriteString_16(400-16,150-20+33, " ----",  0);
 		}else{
 			Hex_Format(Test_Dispvalue.R1Value.Num,1,4,0);	
-			LCD_DrawRect(400-16, 150-20,479,180-20 ,Colour.black ) ;
-			WriteString_16(400-16,150-20, DispBuf,  0);//增加算法  把顺序改过来
+			LCD_DrawRect(400-16, 150-20+33,479,180-20+33 ,Colour.black ) ;
+			WriteString_16(400-16,150-20+33, DispBuf,  0);//增加算法  把顺序改过来
 		}
-		WriteString_16(440,150-20, "kΩ",  0);//增加算法  把顺序改过来
+		WriteString_16(440,150-20+33, "kΩ",  0);//增加算法  把顺序改过来
 		
-		WriteString_16(380-20,183-20, "R2",  0);//增加算法  把顺序改过来
+		WriteString_16(380-20,183-20+20, "R2",  0);//增加算法  把顺序改过来
 		if(Test_Dispvalue.R2Value.Num > 1000)
 		{
-			WriteString_16(400-16,183-20, " ----",  0);
+			WriteString_16(400-16,183-20+20, " ----",  0);
 		}else{
 			Hex_Format(Test_Dispvalue.R2Value.Num,1,4,0);	
 			
-			LCD_DrawRect(400-16, 183-20,479,213-20 ,Colour.black ) ;
-			WriteString_16(400-16,183-20, DispBuf,  0);//增加算法  把顺序改过来
+			LCD_DrawRect(400-16, 183-20+20,479,204-20+20 ,Colour.black ) ;
+			WriteString_16(400-16,183-20+20, DispBuf,  0);//增加算法  把顺序改过来
 		}
-		WriteString_16(440,183-20, "kΩ",  0);//增加算法  把顺序改过来
+		WriteString_16(440,183-20+20, "kΩ",  0);//增加算法  把顺序改过来
 //		}
 	}else if(siwtch == 2){//程控负载
 		
