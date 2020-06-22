@@ -1607,10 +1607,10 @@ void List_Process(void)
 						Button_Page.index=4;
 					}
 					else if(Button_Page.index<=4){
-						if(Button_Page.index>2)
-						{
-							Button_Page.index-=2;
-						}
+//						if(Button_Page.index>2)
+//						{
+//							Button_Page.index-=2;
+//						}
 					}else if(Button_Page.index>4){
 						if(Button_Page.index<1)
 						{
@@ -1631,13 +1631,13 @@ void List_Process(void)
 					}
 					else if(Button_Page.index<=4){
 						
-						if(Button_Page.index<=2)
-						{
-							Button_Page.index+=2;
-						}
-						else{
-							Button_Page.index-=2;
-						}
+//						if(Button_Page.index<=2)
+//						{
+//							Button_Page.index+=2;
+//						}
+//						else{
+//							Button_Page.index-=2;
+//						}
 					}else if(Button_Page.index>4){
 						if(Button_Page.page < 2)
 						{
@@ -1783,15 +1783,15 @@ void List_Process(void)
 							case 3:
 								Coordinates.xpos=LIST2+88+32;
 								Coordinates.ypos=FIRSTLINE;
-								Coordinates.lenth=73;
+								Coordinates.lenth=72;
 								SaveSIM.Loop=Disp_Set_Step(&Coordinates);
 //								List_Process();
 							break;
 							case 4:
 								Coordinates.xpos=LIST2+88+32;;
 								Coordinates.ypos=FIRSTLINE+SPACE1;
-								Coordinates.lenth=73;
-								SaveSIM.LoopDelay=Disp_Set_Step(&Coordinates);
+								Coordinates.lenth=85;
+								SaveSIM.LoopDelay=Disp_Set_DTime(&Coordinates);
 //								List_Process();
 							break;
 	//						case 2:
@@ -6521,7 +6521,28 @@ Sort_TypeDef Disp_NumKeyboard_time(Disp_Coordinates_Typedef *Coordinates )
 					
 				break;
 				case Key_F2:
+					if(page==0)
+						Sort_set.Unit=2;
+//					else
+//						Sort_set.Unit=6;
+					While_flag=0;
+					if(key_count<7)
+					{
+						if(dot_num==0)
+						{
+							if(key_count>0)
+							{
+								Disp_buff[key_count]='.';
+								dot_num1=key_count;
+								key_count++;
+							
+							
+							}
+							dot_num++;
+						}
 					
+					}
+					Sort_set.Updata_flag=1;
 					
 				break;
 				case Key_F3:
@@ -7376,6 +7397,29 @@ Sort_TypeDef Disp_Set_Step(Disp_Coordinates_Typedef *Coordinates)
 {
 	Sort_TypeDef Sort_num,Sort_num1;
 	Disp_button_Num_step();
+	Sort_num=Disp_NumKeyboard_time(Coordinates);
+	Sort_num1=Time_Set_Cot(&Sort_num);
+	Sort_num1.Num /= 1000;
+//	if(Sort_num1.Num>200)
+//	{
+//		Sort_num1.Num = 200;
+//	}
+	if(Sort_num1.Updata_flag==0)
+	{
+		Sort_num1.Dot=0;
+		Sort_num1.Num=0;
+		Sort_num1.Unit=0;
+	
+	}
+		
+	return Sort_num1;
+
+}
+
+Sort_TypeDef Disp_Set_DTime(Disp_Coordinates_Typedef *Coordinates)
+{
+	Sort_TypeDef Sort_num,Sort_num1;
+	Disp_button_DTime();
 	Sort_num=Disp_NumKeyboard_time(Coordinates);
 	Sort_num1=Time_Set_Cot(&Sort_num);
 	Sort_num1.Num /= 1000;

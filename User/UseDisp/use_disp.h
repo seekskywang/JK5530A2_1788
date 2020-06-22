@@ -93,6 +93,7 @@ void Disp_button_Num_mms(void);
 void Disp_button_Num_r(void);
 void Disp_button_Num_ntcr(void);
 void Disp_button_Num_step(void);
+void Disp_button_DTime(void);
 void Disp_button_Num_Freq(void);
 Sort_TypeDef Time_Set_Cov(Sort_TypeDef *Time);
 Sort_TypeDef Freq_Set_Cov(Sort_TypeDef *Freq);

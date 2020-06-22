@@ -1552,6 +1552,18 @@ void Disp_button_Num_step(void)
 
 
 }
+
+void Disp_button_DTime(void)	
+{
+	Disp_Fastbutton();
+	
+	Colour.black=LCD_COLOR_TEST_BUTON;
+	Colour.Fword=White;
+	WriteString_16(84, 271-30, "s",  0);
+	WriteString_16(84+80, 271-30, "min",  0);
+
+
+}
 //按键数字输入n,u,p,m,next,
 void Disp_button_Num_Input(uint8_t page)    
 	
@@ -2392,7 +2404,7 @@ void Disp_List_Item(void)
 	
 	Colour.Fword=White;
 	Colour.black=LCD_COLOR_TEST_BACK;
-	for(i=0;i<4;i++)
+	for(i=0;i<2;i++)
 	{
 		if(i<2)
 		{
@@ -3891,35 +3903,41 @@ void Disp_List_value(Button_Page_Typedef* Button_Page)
 
 	
 	
-	//	循环测试
-	Black_Select=(Button_Page->index==3)?1:0;
-	if(Black_Select)
-	{
-		Colour.black=LCD_COLOR_SELECT;
-	
-	}
-	else
-	{
-		Colour.black=LCD_COLOR_TEST_BACK;
-	}
-	Hex_Format(SaveSIM.Loop.Num,0,3,0);
-	LCD_DrawRect(LIST2+87+32, FIRSTLINE-2,SELECT_2END ,FIRSTLINE+SPACE1-4 , Colour.black ) ;
-	WriteString_16(LIST2+87+32,FIRSTLINE, DispBuf,  0);
-	
-	//	循环间隔
-	Black_Select=(Button_Page->index==4)?1:0;
-	if(Black_Select)
-	{
-		Colour.black=LCD_COLOR_SELECT;
-	
-	}
-	else
-	{
-		Colour.black=LCD_COLOR_TEST_BACK;
-	}
-	Hex_Format(SaveSIM.Loop.Num,0,3,0);
-	LCD_DrawRect(LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END ,FIRSTLINE+SPACE1*2-4, Colour.black ) ;
-	WriteString_16(LIST2+87+32,FIRSTLINE+SPACE1, DispBuf,  0);
+//	//	循环测试
+//	Black_Select=(Button_Page->index==3)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//	Hex_Format(SaveSIM.Loop.Num,0,3,0);
+//	LCD_DrawRect(LIST2+87+32, FIRSTLINE-2,SELECT_2END ,FIRSTLINE+SPACE1-4 , Colour.black ) ;
+//	WriteString_16(LIST2+87+32,FIRSTLINE, DispBuf,  0);
+//	
+//	//	循环间隔
+//	Black_Select=(Button_Page->index==4)?1:0;
+//	if(Black_Select)
+//	{
+//		Colour.black=LCD_COLOR_SELECT;
+//	
+//	}
+//	else
+//	{
+//		Colour.black=LCD_COLOR_TEST_BACK;
+//	}
+//	Hex_Format(SaveSIM.LoopDelay.Num,0,3,0);
+//	LCD_DrawRect(LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+20 ,FIRSTLINE+SPACE1*2-4, Colour.black ) ;
+//	WriteString_16(LIST2+87+32,FIRSTLINE+SPACE1, DispBuf,  0);
+//	if(SaveSIM.LoopDelay.Unit == 1)
+//	{
+//		WriteString_16(LIST2+87+32+58,FIRSTLINE+SPACE1, "s  ",  0);
+//	}else if(SaveSIM.LoopDelay.Unit == 2){
+//		WriteString_16(LIST2+87+32+58,FIRSTLINE+SPACE1, "min",  0);
+//	}
 	
 	if((SaveSIM.ListNum.Num/5+1) > Button_Page->page)
 	{
@@ -8154,12 +8172,12 @@ void Disp_IRTEST_Res(void)
 			Colour.Fword=Green;
 		}
 	}
-	Colour.black=LCD_COLOR_TEST_BACK;
+	Colour.black=LCD_COLOR_TEST_MID;
 	Hex_Format(Test_Dispvalue.OCValue.Num,3,5,0);
-	LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1-2,SELECT_2END+8 , FIRSTLINE+SPACE1*2-4 , Colour.black ) ;//SPACE1
-	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1, DispBuf,  0);//增加算法  把顺序改过来
-	WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1, "A",  1);
-	
+	LCD_DrawRect( 400-16, 117-20,479, 147-20 , Colour.black ) ;//SPACE1
+	WriteString_16(400-16,117-20, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(450, 117-20, "A",  1);
+
 	if(SaveSIM.Comp == 1 && (SaveSIM.STHIGH.Num != 0 || SaveSIM.STLOW.Num != 0))
 	{
 		if(Test_Dispvalue.ShortT.Num > SaveSIM.STHIGH.Num 
@@ -8172,9 +8190,9 @@ void Disp_IRTEST_Res(void)
 		}
 	}
 	Hex_Format(Test_Dispvalue.ShortT.Num,0,3,0);		
-	LCD_DrawRect( LIST2+87+32, FIRSTLINE+SPACE1*2-2,SELECT_2END+9,FIRSTLINE+SPACE1*3-4, Colour.black ) ;//SPACE1
-	WriteString_16(LIST2+88+32,FIRSTLINE+SPACE1*2, DispBuf,  0);//增加算法  把顺序改过来
-	WriteString_16(LIST2+88+32+60, FIRSTLINE+SPACE1*2, "ms",  1);
+	LCD_DrawRect( 400-16, 117-20+22,479, 147-20+22 , Colour.black ) ;//SPACE1
+	WriteString_16(400-16,117-20+22, DispBuf,  0);//增加算法  把顺序改过来
+	WriteString_16(450, 117-20+22, "ms",  1);
 	
 	if(SaveSIM.Comp == 1 && (SaveSIM.R1HIGH.Num != 0 || SaveSIM.R1LOW.Num != 0))
 	{
@@ -8186,18 +8204,19 @@ void Disp_IRTEST_Res(void)
 		}else{
 			Colour.Fword=Green;
 		}
-	}
+	}		
+		
 	Colour.black=LCD_COLOR_TEST_MID;
-	WriteString_16(380-20,150-20, "R1",  0);//增加算法  把顺序改过来
+	WriteString_16(380-20,150-20+33, "R1",  0);//增加算法  把顺序改过来
 	if(Test_Dispvalue.R1RES.Num > 1000)
 	{
-		WriteString_16(400-16,150-20, " ----",  0);
+		WriteString_16(400-16,150-20+33, " ----",  0);
 	}else{
 		Hex_Format(Test_Dispvalue.R1RES.Num,1,4,0);	
-		LCD_DrawRect(400-16, 150-20,479,180-20 ,Colour.black ) ;
-		WriteString_16(400-16,150-20, DispBuf,  0);//增加算法  把顺序改过来
+		LCD_DrawRect(400-16, 150-20+33,479,180-20+33 ,Colour.black ) ;
+		WriteString_16(400-16,150-20+33, DispBuf,  0);//增加算法  把顺序改过来
 	}
-	WriteString_16(440,150-20, "kΩ",  0);//增加算法  把顺序改过来
+	WriteString_16(440,150-20+33, "kΩ",  0);//增加算法  把顺序改过来
 	
 	if(SaveSIM.Comp == 1 && (SaveSIM.R2HIGH.Num != 0 || SaveSIM.R2LOW.Num != 0))
 	{
@@ -8210,17 +8229,17 @@ void Disp_IRTEST_Res(void)
 			Colour.Fword=Green;
 		}
 	}
-	WriteString_16(380-20,183-20, "R2",  0);//增加算法  把顺序改过来
+	WriteString_16(380-20,183-20+20, "R2",  0);//增加算法  把顺序改过来
 	if(Test_Dispvalue.R2RES.Num > 1000)
 	{
-		WriteString_16(400-16,183-20, " ----",  0);
+		WriteString_16(400-16,183-20+20, " ----",  0);
 	}else{
 		Hex_Format(Test_Dispvalue.R2RES.Num,1,4,0);	
 		
-		LCD_DrawRect(400-16, 183-20,479,213-20 ,Colour.black ) ;
-		WriteString_16(400-16,183-20, DispBuf,  0);//增加算法  把顺序改过来
+		LCD_DrawRect(400-16, 183-20+20,479,213-20+20 ,Colour.black ) ;
+		WriteString_16(400-16,183-20+20, DispBuf,  0);//增加算法  把顺序改过来
 	}
-	WriteString_16(440,183-20, "kΩ",  0);//增加算法  把顺序改过来
+	WriteString_16(440,183-20+20, "kΩ",  0);//增加算法  把顺序改过来
 	if(SaveSIM.Comp == 1)
 	{
 		Comp_Led();
@@ -8588,8 +8607,9 @@ void ListHandle(void)
 			mainswitch = 0;
 			jumpflag = 0;
 			Send_Request(5,mainswitch);
-			
+			Test_Dispvalue.RES1[Test_Dispvalue.liststep.Num] = Test_Dispvalue.LVRES;
 			Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.OCValue;
+			Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num] = Test_Dispvalue.IRRES;
 			Test_Dispvalue.RES4[Test_Dispvalue.liststep.Num] = Test_Dispvalue.ShortT;
 			Comp_Hanlde(2);
 			if(Test_Dispvalue.liststep.Num + 1 < SaveSIM.ListNum.Num)
