@@ -7280,9 +7280,9 @@ Sort_TypeDef Disp_Set_C(Disp_Coordinates_Typedef *Coordinates)
 	Disp_button_Num_A();
 	Sort_num=Disp_NumKeyboard_Set(Coordinates);
 	Sort_num1=Time_Set_Cov(&Sort_num);
-	if(Sort_num1.Num>75000)
+	if(Sort_num1.Num>30000)
 	{
-		Sort_num1.Num = 70000;
+		Sort_num1.Num = 30000;
 	}
 	if(Sort_num1.Updata_flag==0)
 	{
