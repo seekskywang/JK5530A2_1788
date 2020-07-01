@@ -1100,6 +1100,10 @@ void Pow_Process(void)
 							Coordinates.ypos=FIRSTLINE;
 							Coordinates.lenth=76;
 							SaveSIM.PowV=Disp_Set_Num(&Coordinates);
+							if(SaveSIM.PowV.Num > 30000)
+							{
+								SaveSIM.PowV.Num = 30000;
+							}
 							Send_Request(4,1);
 							break;
 						case 2:
