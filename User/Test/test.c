@@ -2374,14 +2374,27 @@ void Test_Process(void)
 			&& ocfinish == 0 && mainswitch == 0)//开始测试条件判断
 			{
 				timecount ++;
-				if(timecount > 30*(2-SaveSIM.testmode))//快速和精准等待时间区分
+				if(SaveSIM.testmode == 1)//快速
 				{
-					Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
-					Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
-					Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
-					Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
-					mainswitch = 1;
-					Send_Request(3,mainswitch);
+					if(timecount > 5)//快速和精准等待时间区分
+					{
+						Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+						Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+						Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+						Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+						mainswitch = 1;
+						Send_Request(3,mainswitch);
+					}
+				}else if(SaveSIM.testmode == 0){//精准
+					if(timecount > 60)//快速和精准等待时间区分
+					{
+						Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+						Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+						Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+						Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+						mainswitch = 1;
+						Send_Request(3,mainswitch);
+					}
 				}
 			}else{
 				timecount = 0;

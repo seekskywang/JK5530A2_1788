@@ -5482,16 +5482,16 @@ void Disp_Sys_value(Button_Page_Typedef* Button_Page)
 	{
 		if(SaveSIM.jkflag == 1)
 		{
-			WriteString_16(LIST1+95, FIRSTLINE+2, "JK5530+",  0);//
+			WriteString_16(LIST1+95, FIRSTLINE+2, "JK5530+(H)",  0);//
 		}else{
-			WriteString_16(LIST1+95, FIRSTLINE+2, "5530+",  0);//
+			WriteString_16(LIST1+95, FIRSTLINE+2, "5530+(H)",  0);//
 		}
 	}else if(SaveData.Sys_Setup.Language==0){
 		if(SaveSIM.jkflag == 1)
 		{
-			WriteString_16(LIST1+95, FIRSTLINE+2, "JK5530+",  0);//
+			WriteString_16(LIST1+95, FIRSTLINE+2, "JK5530+(H)",  0);//
 		}else{
-			WriteString_16(LIST1+95, FIRSTLINE+2, "5530+",  0);//
+			WriteString_16(LIST1+95, FIRSTLINE+2, "5530+(H)",  0);//
 		}
 	}
 	
@@ -8591,7 +8591,7 @@ void ListHandle(void)
 				LCD_DrawRect( 170, 116,250 , 154 , Colour.black ) ;
 			}else{	
 				listswitch = 0;
-				mainswitch = 0;
+				mainswitch = 0; 	
 				Test_Dispvalue.liststep.Num = 0;
 			}
 		}else{
