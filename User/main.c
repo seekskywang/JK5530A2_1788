@@ -129,7 +129,7 @@ int main(void)
 	EEPROM_Init();
 	
     RTC_INT();
-    RE485();
+//    RE485();
     
 //    RTC_CntIncrIntConfig (LPC_RTC, RTC_TIMETYPE_SECOND, ENABLE);
 //    NVIC_EnableIRQ(RTC_IRQn);
@@ -204,42 +204,42 @@ int main(void)
 			case SYS_STATUS_FACRDEBUG:	 //公司校正界面
 				Fac_DebugProcess();
 			break;
-			case SYS_STATUS_RANGE:
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-				Range_Process();//挡号显示
-				break;
-			case SYS_STATUS_RANGECOUNT: //档计数显示
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-			    Range_CountProcess();	
-				break;
-			case SYS_STATUS_ITEM:	 //列表扫描显示
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-				ItemProcess();
-				break;
-			case SYS_STATUS_FILE:   //还没有文件管理的子程序
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-				File_Process();//文件管理
-				break;
-			case SYS_STATUS_DATASTORE://还没有文件管理的子程序
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-				Data_StoreProcess();//数据保存
-				break;
-			case SYS_STATUS_SETUPTEST:	//测量设置
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-				Setup_Process();//设置处理
-				break;
-			case SYS_STATUS_USERDEBUG: //用户校正界面
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-				Use_DebugProcess();
-				break;
-            case SYS_STATUS_LIMITSET:  //极限扫描设置
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-                Use_LimitSetProcess();
-                break;
-            case SYS_STATUS_ITEMSET: //列表扫描设置
-                lcd_Clear(LCD_COLOR_TEST_BACK);
-                Use_ITEMSetProcess();
-                break;
+//			case SYS_STATUS_RANGE:
+//				lcd_Clear(LCD_COLOR_TEST_BACK);
+//				Range_Process();//挡号显示
+//				break;
+//			case SYS_STATUS_RANGECOUNT: //档计数显示
+//				lcd_Clear(LCD_COLOR_TEST_BACK);
+//				Range_CountProcess();	
+//				break;
+//			case SYS_STATUS_ITEM:	 //列表扫描显示
+//				lcd_Clear(LCD_COLOR_TEST_BACK);
+//				ItemProcess();
+//				break;
+//			case SYS_STATUS_FILE:   //还没有文件管理的子程序
+//				lcd_Clear(LCD_COLOR_TEST_BACK);
+//				File_Process();//文件管理
+//				break;
+//			case SYS_STATUS_DATASTORE://还没有文件管理的子程序
+//				lcd_Clear(LCD_COLOR_TEST_BACK);
+//				Data_StoreProcess();//数据保存
+//				break;
+//			case SYS_STATUS_SETUPTEST:	//测量设置
+//                lcd_Clear(LCD_COLOR_TEST_BACK);
+//				Setup_Process();//设置处理
+//				break;
+//			case SYS_STATUS_USERDEBUG: //用户校正界面
+//                lcd_Clear(LCD_COLOR_TEST_BACK);
+//				Use_DebugProcess();
+//				break;
+//            case SYS_STATUS_LIMITSET:  //极限扫描设置
+//                lcd_Clear(LCD_COLOR_TEST_BACK);
+//                Use_LimitSetProcess();
+//                break;
+//            case SYS_STATUS_ITEMSET: //列表扫描设置
+//                lcd_Clear(LCD_COLOR_TEST_BACK);
+//                Use_ITEMSetProcess();
+//                break;
             case SYS_STATUS_SYSSET : //系统设置
                 
                 Use_SysSetProcess();

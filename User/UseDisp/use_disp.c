@@ -8303,7 +8303,7 @@ void Disp_Testvalue(uint8_t siwtch)
 		
 		Colour.black=LCD_COLOR_TEST_MID;
 		WriteString_16(380-20,150-20+33, "R1",  0);//增加算法  把顺序改过来
-		if(Test_Dispvalue.R1Value.Num > 1000)
+		if(Test_Dispvalue.R1Value.Num > 1000  || Test_Dispvalue.R1Value.Num < 10)
 		{
 			WriteString_16(400-16,150-20+33, " ----",  0);
 		}else{
@@ -8314,7 +8314,7 @@ void Disp_Testvalue(uint8_t siwtch)
 		WriteString_16(440,150-20+33, "kΩ",  0);//增加算法  把顺序改过来
 		
 		WriteString_16(380-20,183-20+20, "R2",  0);//增加算法  把顺序改过来
-		if(Test_Dispvalue.R2Value.Num > 1000)
+		if(Test_Dispvalue.R2Value.Num > 1000 || Test_Dispvalue.R2Value.Num < 10)
 		{
 			WriteString_16(400-16,183-20+20, " ----",  0);
 		}else{
@@ -8615,7 +8615,7 @@ void ListHandle(void)
 			if(Test_Dispvalue.liststep.Num + 1 < SaveSIM.ListNum.Num)
 			{
 				startdelay = 1000;
-				while(listdelay != 0)
+				while(listdelay != 0) 
 				{
 					listdelay--;				
 				}
