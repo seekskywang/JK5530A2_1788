@@ -155,7 +155,7 @@ int main(void)
 //	}
 //	SetSystemStatus(SYS_STATUS_FACRDEBUG);//开机上电状态
 //	BUZZER();
-	SetSystemStatus(SYS_STATUS_TOOL);//开机上电状态
+	SetSystemStatus(SYS_STATUS_POWER);//开机上电状态
 	
     while(1)
     { 	

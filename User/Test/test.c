@@ -189,10 +189,10 @@ void Power_Process(void)
 	Turnon_backlight();
 //	Beep_on();
 	HW_Sendvalueto164(0);
-	Bais_LedOff();
-	Lock_LedOff();
-	Pass_Led();
-	Power_Off_led();
+//	Bais_LedOff();
+//	Lock_LedOff();
+//	Pass_Led();
+//	Power_Off_led();
 //	#ifdef DISP_JK
 	
 //	#endif
@@ -204,7 +204,7 @@ void Power_Process(void)
 	ReadSavedata();
 	if(SaveSIM.jkflag)
 	{
-		lcd_image((uint8_t *)gImage_open);
+//		lcd_image((uint8_t *)gImage_open);
 	}
 	Set_Compbcd_float();
 	READ_COMP();
