@@ -22,11 +22,102 @@ Dialog DLL:      TARMP1.DLL V1.26.0.0
  
 <h2>Project:</h2>
 F:\JK5530A2_1788\Project\project.uvprojx
-Project File Date:  07/08/2020
+Project File Date:  07/09/2020
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Open1788'
+compiling main.c...
+..\User\main.c(107): warning:  #177-D: variable "numBlks"  was declared but never referenced
+        uint32_t  numBlks, blkSize;
+..\User\main.c(107): warning:  #177-D: variable "blkSize"  was declared but never referenced
+        uint32_t  numBlks, blkSize;
+..\User\main.c(108): warning:  #177-D: variable "inquiryResult"  was declared but never referenced
+        uint8_t  inquiryResult[INQUIRY_LENGTH];
+..\User\main.c(111): warning:  #177-D: variable "rc"  was declared but never referenced
+        uint8_t key,rc;
+..\User\main.c(118): warning:  #177-D: variable "buff"  was declared but never referenced
+        char buff[10];
+..\User\main.c: 5 warnings, 0 errors
+compiling timer.c...
+compiling lpc177x_8x_lcd.c...
+..\User\hzk.h(1100): warning:  #375-D: declaration requires a typedef name
+  };
+..\User\LCD\lpc177x_8x_lcd.c(52): warning:  #177-D: variable "pDst"  was declared but never referenced
+        unsigned long *pDst = (unsigned long *)LCD_VRAM_BASE_ADDR;
+..\User\LCD\lpc177x_8x_lcd.c(526): warning:  #177-D: variable "i"  was declared but never referenced
+      uint16_t i,j;
+..\User\LCD\lpc177x_8x_lcd.c(775): warning:  #177-D: variable "usIndex"  was declared but never referenced
+        uint16_t usIndex=0;
+..\User\LCD\lpc177x_8x_lcd.c: 4 warnings, 0 errors
+compiling TouchPanel.c...
+..\User\TouchPanel\TouchPanel.c(373): warning:  #223-D: function "LCD_SetPoint" declared implicitly
+    LCD_SetPoint(Xpos,Ypos,Blue);     /* Center point */
+..\User\TouchPanel\TouchPanel.c: 1 warning, 0 errors
+compiling use_disp.c...
+..\User\UseDisp\use_disp.c(3357): warning:  #177-D: variable "i"  was declared but never referenced
+        uint32_t i;
+..\User\UseDisp\use_disp.c(4085): warning:  #177-D: variable "i"  was declared but never referenced
+        uint32_t i;
+..\User\UseDisp\use_disp.c(4424): warning:  #177-D: variable "i"  was declared but never referenced
+        uint32_t i;
+..\User\UseDisp\use_disp.c(4609): warning:  #177-D: variable "i"  was declared but never referenced
+        uint32_t i;
+..\User\UseDisp\use_disp.c(4610): warning:  #177-D: variable "Black_Select"  was declared but never referenced
+        uint32_t Black_Select;
+..\User\UseDisp\use_disp.c(8935): warning:  #177-D: variable "i"  was declared but never referenced
+        uint8_t i=3;            
+..\User\UseDisp\use_disp.c(8987): warning:  #177-D: variable "i"  was declared but never referenced
+        uint8_t i=5;
+..\User\UseDisp\use_disp.c(9044): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+        strcpy(USART_RX_BUF,CmdStr[x-1]);
+..\User\UseDisp\use_disp.c(9054): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        sprintf(&USART_RX_BUF[len],"%1d",req);
+..\User\UseDisp\use_disp.c(9058): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        sprintf(&USART_RX_BUF[len],"%1d",req);
+..\User\UseDisp\use_disp.c(9082): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        strcat(USART_RX_BUF,buf);
+..\User\UseDisp\use_disp.c(9111): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        strcat(USART_RX_BUF,buf);
+..\User\UseDisp\use_disp.c(9136): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        strcat(USART_RX_BUF,buf);
+..\User\UseDisp\use_disp.c(9142): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        strcat(USART_RX_BUF,buf);
+..\User\UseDisp\use_disp.c(9148): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        strcat(USART_RX_BUF,buf);
+..\User\UseDisp\use_disp.c(9153): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+                        sprintf(&USART_RX_BUF[len],"%1d",req);
+..\User\UseDisp\use_disp.c(9040): warning:  #177-D: variable "i"  was declared but never referenced
+        u8 i,len;
+..\User\UseDisp\use_disp.c(9226): warning:  #177-D: variable "Gmode_Vale"  was declared but never referenced
+    uint8_t Gmode_Vale;
+..\User\UseDisp\use_disp.c(9233): warning:  #177-D: variable "tmpFg"  was declared but never referenced
+        uint8_t tmpFg;
+..\User\UseDisp\use_disp.c(9234): warning:  #177-D: variable "LM_S_Vale"  was declared but never referenced
+        uint8_t LM_S_Vale,LOW_I_Vale,H_L_Vale,SWITCH_Vale;
+..\User\UseDisp\use_disp.c(9234): warning:  #177-D: variable "LOW_I_Vale"  was declared but never referenced
+        uint8_t LM_S_Vale,LOW_I_Vale,H_L_Vale,SWITCH_Vale;
+..\User\UseDisp\use_disp.c(9234): warning:  #177-D: variable "H_L_Vale"  was declared but never referenced
+        uint8_t LM_S_Vale,LOW_I_Vale,H_L_Vale,SWITCH_Vale;
+..\User\UseDisp\use_disp.c(9234): warning:  #177-D: variable "SWITCH_Vale"  was declared but never referenced
+        uint8_t LM_S_Vale,LOW_I_Vale,H_L_Vale,SWITCH_Vale;
+..\User\UseDisp\use_disp.c(9235): warning:  #177-D: variable "I_ADC_Vale"  was declared but never referenced
+        uint16_t I_ADC_Vale,V_ADC_Vale;
+..\User\UseDisp\use_disp.c(9235): warning:  #177-D: variable "V_ADC_Vale"  was declared but never referenced
+        uint16_t I_ADC_Vale,V_ADC_Vale;
+..\User\UseDisp\use_disp.c(9237): warning:  #177-D: variable "Lvl_Vale"  was declared but never referenced
+        float Lvl_Vale,fadcx,fsingal, fVale;
+..\User\UseDisp\use_disp.c(9237): warning:  #177-D: variable "fadcx"  was declared but never referenced
+        float Lvl_Vale,fadcx,fsingal, fVale;
+..\User\UseDisp\use_disp.c(9237): warning:  #177-D: variable "fsingal"  was declared but never referenced
+        float Lvl_Vale,fadcx,fsingal, fVale;
+..\User\UseDisp\use_disp.c(9237): warning:  #177-D: variable "fVale"  was declared but never referenced
+        float Lvl_Vale,fadcx,fsingal, fVale;
+..\User\UseDisp\use_disp.c(10028): warning:  #177-D: variable "i"  was declared but never referenced
+        u8 i;
+..\User\UseDisp\use_disp.c(2759): warning:  #177-D: function "Dis_Dot"  was declared but never referenced
+  static  void  Dis_Dot(void)
+..\User\UseDisp\use_disp.c: 31 warnings, 0 errors
 compiling test.c...
 ..\User\Test\test.c(168): warning:  #127-D: expected a statement
   }     
@@ -201,11 +292,36 @@ compiling test.c...
 ..\User\Test\test.c(8383): warning:  #550-D: variable "password_flag"  was set but never used
       char password_flag=0;
 ..\User\Test\test.c: 86 warnings, 0 errors
+compiling GlobalValue.c...
+compiling key.c...
+compiling rtc.c...
+compiling dma.c...
+compiling debug_frmwrk.c...
+..\Libraries\Drivers\source\debug_frmwrk.c(496): warning:  #223-D: function "vsprintf" declared implicitly
+      vsprintf((char *)buffer, (char const *)format, vArgs);
+..\Libraries\Drivers\source\debug_frmwrk.c(494): warning:  #177-D: variable "tmp"  was declared but never referenced
+              char      *tmp;
+..\Libraries\Drivers\source\debug_frmwrk.c(620): warning:  #550-D: variable "Status"  was set but never used
+         uint8_t Status,Res;
+..\Libraries\Drivers\source\debug_frmwrk.c(717): warning:  #177-D: variable "buf"  was declared but never referenced
+        uint8_t buf[S_TX_BUF_SIZE];
+..\Libraries\Drivers\source\debug_frmwrk.c(836): warning:  #223-D: function "memcpy" declared implicitly
+        memcpy(buf, _pBuf, _ucLen);
+..\Libraries\Drivers\source\debug_frmwrk.c(885): warning:  #177-D: variable "data"  was declared but never referenced
+        uint32_t data;
+..\Libraries\Drivers\source\debug_frmwrk.c(976): warning:  #177-D: variable "dat"  was declared but never referenced
+      uint8_t Status,dat;
+..\Libraries\Drivers\source\debug_frmwrk.c(1113): warning:  #177-D: variable "Button_Page"  was declared but never referenced
+      Button_Page_Typedef Button_Page;
+..\Libraries\Drivers\source\debug_frmwrk.c(692): warning:  #177-D: function "MODS_SendAckOk"  was declared but never referenced
+  static void MODS_SendAckOk(void)
+..\Libraries\Drivers\source\debug_frmwrk.c: 9 warnings, 0 errors
+compiling usbhost_lpc17xx.c...
 linking...
 Program Size: Code=82924 RO-data=38044 RW-data=808 ZI-data=22352  
 FromELF: creating hex file...
 After Build - User command #1: D:\Keil_v5\ARM\ARMCC\bin\fromelf.exe --bin  -o ..\shengji\update.bin Output\project.axf
-".\Output\project.axf" - 0 Error(s), 86 Warning(s).
+".\Output\project.axf" - 0 Error(s), 136 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -219,7 +335,7 @@ Package Vendor: Keil
   D:\Keil_v5\ARM\PACK\Keil\LPC1700_DFP\2.5.0\Device\Include
 
 <h2>Collection of Component Files used:</h2>
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:09
 </pre>
 </body>
 </html>
