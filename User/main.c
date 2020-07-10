@@ -51,10 +51,10 @@
 
 /************************** PRIVATE VARIABLES *************************/
 /* SysTick Counter */
-volatile unsigned long SysTickCnt;
+//volatile unsigned long SysTickCnt;
 
 /************************** PRIVATE FUNCTIONS *************************/
-void SysTick_Handler (void);
+//void SysTick_Handler (void);
 
 void Delay (unsigned long tick);
 
@@ -103,7 +103,7 @@ void GPIO_IRQHandler()
 
 
 int main(void)
-    {
+{
 	uint32_t  numBlks, blkSize;
 	uint8_t  inquiryResult[INQUIRY_LENGTH];
 	
@@ -116,10 +116,15 @@ int main(void)
 	
 	/* Generate interrupt each 1 ms   */
 	char buff[10];
+//	SCB->VTOR  =0x018000;
+	SCB->VTOR  =0x018000 & 0x1FFFFF80;
+	NVIC_EnableIRQ(MCI_IRQn);
+	__enable_irq();
 	SysTick_Config(cclk/1000 - 1); 
 	GPIO_IntCmd(0, 1<<19, 1);//p0_19 下降沿中断
 	NVIC_SetPriority(GPIO_IRQn, 1);
 	NVIC_EnableIRQ(GPIO_IRQn);
+	
 	HW_keyInt();
     GPIO_Plc_Configuration();
     debug_frmwrk_init();
@@ -145,6 +150,8 @@ int main(void)
 	GLCD_Init (LogoPic.pPicStream, NULL);
    	/*Enable LCD*/
 	GLCD_Ctrl (TRUE);
+	
+	
 //    touch_init();
 //    TouchPanel_Calibrate();
 	HW_Sendvalueto164(0);
@@ -155,6 +162,9 @@ int main(void)
 //	}
 //	SetSystemStatus(SYS_STATUS_FACRDEBUG);//开机上电状态
 //	BUZZER();
+	NVIC_DisableIRQ(GPIO_IRQn);
+	Power_Off_led();
+    GPIO_ClearInt(0, 1<<19);
 	SetSystemStatus(SYS_STATUS_POWER);//开机上电状态
 	
     while(1)
@@ -181,7 +191,7 @@ int main(void)
 		switch(GetSystemStatus())
 		{
 			case SYS_STATUS_POWER:
-				lcd_Clear(LCD_COLOR_TEST_BACK);
+				lcd_Clear(LCD_COLOR_BLACK);
 				Power_Process();//开机上电处理
 				break;
 			case SYS_STATUS_TEST:   //测量显示
@@ -304,17 +314,17 @@ int main(void)
 }
 
 
-/*----------------- INTERRUPT SERVICE ROUTINES --------------------------*/
-/*********************************************************************//**
- * @brief		SysTick handler sub-routine (1ms)
- * @param[in]	None
- * @return 		None
- **********************************************************************/
+///*----------------- INTERRUPT SERVICE ROUTINES --------------------------*/
+///*********************************************************************//**
+// * @brief		SysTick handler sub-routine (1ms)
+// * @param[in]	None
+// * @return 		None
+// **********************************************************************/
 
-void SysTick_Handler (void)
-{
-	SysTickCnt++;
-}
+//void SysTick_Handler (void)
+//{
+//	SysTickCnt++;
+//}
 
 /*-------------------------PRIVATE FUNCTIONS------------------------------*/
 /*********************************************************************//**

@@ -28,5 +28,6 @@
 .\output\test.o: ..\User\Include\../MassStorage/usbhost_ms.h
 .\output\test.o: ..\User\Include\../Fat/usbhost_fat.h
 .\output\test.o: ..\Libraries\Drivers\include\lpc177x_8x_rtc.h
+.\output\test.o: ..\Libraries\Drivers\include\lpc177x_8x_clkpwr.h
 .\output\test.o: ..\Libraries\Drivers\include\open.h
 .\output\test.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

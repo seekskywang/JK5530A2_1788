@@ -50,6 +50,7 @@
 #define	LCD_COLOR_TEST_LINE      0X694368		//线条颜色
 #define	LCD_COLOR_TEST_BAR       0x352F3
 #define	LCD_COLOR_SELECT       	LCD_COLOR_BLUE  //被选中的颜色
+#define	LCD_COLOR_LOGO       	0x352F3  
 #else
 	error Wrong SDRAM config, check ex_sdram.h
 #endif

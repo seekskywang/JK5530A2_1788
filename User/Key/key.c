@@ -1,11 +1,11 @@
 #include "Key/key.h"
 #include "lpc177x_8x_gpio.h"
 #include "Globalvalue/GlobalValue.h"
-//volatile unsigned long SysTickCnt;
-//void SysTick_Handler (void)
-//{
-//	SysTickCnt++;
-//}
+volatile unsigned long SysTickCnt;
+void SysTick_Handler (void)
+{
+	SysTickCnt++;
+}
 void Start_Debugled(char flag)
 {
     if(flag )
@@ -168,7 +168,7 @@ void Power_Relay(unsigned char flag)//下位机电源继电器开关  1 开机  0 关机
 		GPIO_SetValue(0, (1<<20));
 	else
 		GPIO_ClearValue(0, (1<<20));
-    Delay(20);
+//    Delay(20);
 
 
 }

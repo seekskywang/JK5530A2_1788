@@ -54,6 +54,7 @@ void Disp_MidRect(void);
 void Disp_TestScreen(void);
 void Disp_ListScreen(void);
 
+void DrawLogo(uint16_t x,uint16_t y);
 void ListHandle(void);
 void Disp_List_Item(void);
 void Disp_Comp_Item(void);

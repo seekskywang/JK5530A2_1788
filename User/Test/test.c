@@ -15,6 +15,7 @@
 #include  "usbhost_fat.h"
 #include 	"use_disp.h"
 #include "lpc177x_8x_rtc.h"
+#include "lpc177x_8x_clkpwr.h"
 #include "open.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -183,16 +184,18 @@ void Power_Process(void)
 //	u8 buff[4096];
 	u8 key;
     u8 keynum;
+	uint32_t cclk = CLKPWR_GetCLK(CLKPWR_CLKTYPE_CPU);
     Disp_Coordinates_Typedef Debug_Cood;
+//	SysTick_Config(cclk/1000 - 1); 
 	HW_keyInt();
 	GPIO_Led_Configuration();
 	Turnon_backlight();
 //	Beep_on();
 	HW_Sendvalueto164(0);
-//	Bais_LedOff();
-//	Lock_LedOff();
-//	Pass_Led();
-//	Power_Off_led();
+	Bais_LedOff();
+	Lock_LedOff();
+	Pass_Led();
+	Power_Off_led();
 //	#ifdef DISP_JK
 	
 //	#endif
@@ -204,6 +207,7 @@ void Power_Process(void)
 	ReadSavedata();
 	if(SaveSIM.jkflag)
 	{
+		DrawLogo(140,160);
 //		lcd_image((uint8_t *)gImage_open);
 	}
 	Set_Compbcd_float();
@@ -220,6 +224,7 @@ void Power_Process(void)
 			Send_Request(4,1);
 //			Send_Request(1,0);
 		}
+		softswitch=1;
 //		if(i==50)
 //		{
 //			Send_Request(10,1);
