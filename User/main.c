@@ -165,8 +165,8 @@ int main(void)
 	NVIC_DisableIRQ(GPIO_IRQn);
 	Power_Off_led();
     GPIO_ClearInt(0, 1<<19);
-	SetSystemStatus(SYS_STATUS_POWER);//开机上电状态
-	
+//	SetSystemStatus(SYS_STATUS_POWER);//开机上电状态
+	SetSystemStatus(SYS_STATUS_TOOL);//开机上电状态
     while(1)
     { 	
 		key=HW_KeyScsn();
