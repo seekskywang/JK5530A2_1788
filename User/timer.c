@@ -107,13 +107,77 @@ void TIMER0_IRQHandler (void)
     LPC_TIM0->IR = 0x1<<0;		/* clear interrupt flag */
 	Tick_10ms ++;
 //	MODS_Poll();
-	if(mainswitch == 1)
+	if(listswitch == 1)
 	{
-		timer0_counter++;
-	}else{
-		timer2_counter++;
+		if(mainswitch == 1){
+			if(listcap == 1)//负载容量
+			{
+				timer1_counter++;
+				if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+				{
+					if(timer1_counter/100 > SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+					{
+						jumpflag = 1;
+					}
+				}
+			}else if(listcap == 2){//电源容量
+				timer1_counter++;
+				if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+				{
+					if(timer1_counter/100 > SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+					{
+						jumpflag = 1;
+					}
+				}
+			}else if(listcap == 3){//过充超时
+				timer1_counter++;
+				if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+				{
+					if(timer1_counter/100 > SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+					{
+						jumpflag = 1;
+					}
+				}
+			}else if(listcap == 5){//NTC测试
+				timer1_counter++;
+				if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+				{
+					if(timer1_counter/100 > SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+					{
+						jumpflag = 1;
+					}
+				}else{
+					if(timer1_counter > 3000)
+					{
+						jumpflag = 1;
+					}
+				}
+			}else if(listcap == 6){//静态
+				timer1_counter++;
+				if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
+				{
+					if(timer1_counter/100 > SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
+					{
+						jumpflag = 1;
+					}
+				}else{
+					if(timer1_counter > 3000)
+					{
+						jumpflag = 1;
+					}
+				}
+			}
+		}else{
+			timer1_counter = 0;
+		}
 	}
-	timer1_counter++;
+//	if(mainswitch == 1)
+//	{
+//		timer0_counter++;
+//	}else{
+//		timer2_counter++;
+//	}
+	
   return;
 }
 
@@ -283,8 +347,8 @@ uint32_t init_timer ( uint8_t timer_num, uint32_t TimerInterval )
 	timer0_counter = 0;
 	LPC_SC->PCONP |= (0x01<<1);
 	LPC_TIM0->TCR |= (1<<1);//复位定时器
-	LPC_TIM0->PR   = 60000-1;//分频
-	LPC_TIM0->MR0 = TimerInterval;
+	LPC_TIM0->PR   = 0/*60000-1*/;//分频
+	LPC_TIM0->MR0 = TimerInterval/1000 -1;
 	LPC_TIM0->MCR = 3;				/* Interrupt and Reset on MR0 */
 
 	NVIC_EnableIRQ(TIMER0_IRQn);

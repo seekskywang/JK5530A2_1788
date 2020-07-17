@@ -58,6 +58,7 @@ Sort_TypeDef Disp_Set_T(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_ST(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_R(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_NTCR(Disp_Coordinates_Typedef *Coordinates);
+Sort_TypeDef Disp_Set_LISTT(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_DTime(Disp_Coordinates_Typedef *Coordinates);
 Sort_TypeDef Disp_Set_Step(Disp_Coordinates_Typedef *Coordinates);
 uint8_t Freq_Set_Num(Disp_Coordinates_Typedef *Coordinates);

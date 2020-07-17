@@ -31,6 +31,7 @@ uint32_t OldTick;
 const uint8_t Disp_Unit1[]={'p','n','u','m',' ','k','M'};
 const uint8_t Uart_Ordel[]={0x60,0x70,0x71,0x80,0x90,0xa0,0xb0,0xc0,0xe0};
 const uint8_t READDATA[7]={0xAB,0x01,0x06,0x03,0x08,0xbf,'\0'};
+uint16_t listindex[7] = {8,9,7,7,6,6,6};
 extern uint16_t USART_RX_STA;
 extern u8 listdis;
 uint8_t listpage=0;
@@ -200,7 +201,7 @@ void Power_Process(void)
 	
 //	#endif
 	InitGlobalValue();//初始化全局变量
-	init_timer(0, 2);//定时器初始化
+	init_timer(0, PeripheralClock);//定时器初始化
 	
 	enable_timer(0);
 	
@@ -493,11 +494,11 @@ void Load_Process(void)
 				Send_Request(3,mainswitch);
 			}
 		}
-		if(mainswitch == 0 && timer2_counter > 500)
-		{
-//			Read_Temp();
-			timer2_counter = 0;
-		}
+//		if(mainswitch == 0 && timer2_counter > 500)
+//		{
+////			Read_Temp();
+//			timer2_counter = 0;
+//		}
 		if(Disp_Flag==1)
 		{
 			Disp_Load_value(&Button_Page);
@@ -633,7 +634,7 @@ void Load_Process(void)
 				case Key_Disp:
 					if(mainswitch == 0)
 					{
-						SetSystemStatus(SYS_STATUS_TEST);
+						SetSystemStatus(SYS_STATUS_LOAD);
 					}
 				break;
 				case Key_SETUP:
@@ -1016,7 +1017,7 @@ void Pow_Process(void)
 				case Key_Disp:
 					if(mainswitch == 0)
 					{
-						SetSystemStatus(SYS_STATUS_TEST);
+						SetSystemStatus(SYS_STATUS_LOAD);
 					}
 				break;
 				case Key_SETUP:
@@ -1195,7 +1196,8 @@ void Pow_Process(void)
 void List_Process(void)
 {
 	Disp_Coordinates_Typedef  Coordinates;
-	static u8 sendcount;
+	static uint16_t sendcount;
+	static uint16_t listcount;
 	uint16_t len;
 	uint8_t len1 =0;
 	uint8_t timebuff[10];
@@ -1244,53 +1246,75 @@ void List_Process(void)
 					cdctime ++;
 					bc_raw += (float)Test_Dispvalue.LoadC.Num * 1/3600;
 					Test_Dispvalue.LOADCAP[0].Num = (int)bc_raw;
-					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
-					{
-						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
-						{
-							jumpflag = 1;
-						}
-					}
+
 				}else if(listcap == 2){//电源容量
 					cdctime ++;
 					bc_raw += (float)Test_Dispvalue.PowC.Num * 1/3600;
 					Test_Dispvalue.POWCAP[0].Num = (int)bc_raw;
-					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
-					{
-						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
-						{
-							jumpflag = 1;
-						}
-					}
+
 				}else if(listcap == 3){//过充超时
-					cdctime ++;
-					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
-					{
-						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
-						{
-							jumpflag = 1;
-						}
-					}
+
 				}else if(listcap == 5){//NTC测试
-					cdctime ++;
-					if(SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num != 0)
-					{
-						if(cdctime == SaveSIM.TIME[Test_Dispvalue.liststep.Num].Num)
-						{
-							jumpflag = 1;
-						}
-					}else{
-						if(cdctime == 3)
-						{
-							jumpflag = 1;
-						}
-					}
+
+				}else if(listcap == 6){//静态
+
 				}
 			}else{
 				bc_raw = 0;
 				cdctime = 0;
 			}
         }
+		if(Button_Page.page == 4 && SaveSIM.listmode == 0 && Test_Dispvalue.LoadV.Num > SaveSIM.NOMV.Num
+			&& Test_Dispvalue.RValue.Num <= 2000 
+			&& listswitch == 0 && mainswitch == 0)//开始测试条件判断
+		{
+			listcount ++;
+			if(listcount > 5)
+			{				
+				Test_Dispvalue.liststep.Num = 0;
+				listswitch = 1;
+				mainswitch = 1;
+				startdelay = 0;
+				Test_Dispvalue.LVRES = Test_Dispvalue.Vmvalue;
+				Test_Dispvalue.IRRES = Test_Dispvalue.Rmvalue;
+				Send_Request(5,mainswitch);
+			}
+		}else{
+				listcount = 0;			
+		}
+		if(Button_Page.page == 5 && SaveSIM.listmode == 0)
+		{
+			if(USART_RX_STA&0x8000)	   //判断是否接收完数据
+			{					   
+			//	len=USART_RX_STA&0x3f;//得到此次接收到的数据长度   前两位为状态位 所以要与去
+			//	printf("\r\n您发送的消息为:\r\n\r\n");
+	//			DE485;
+				len1=USART_RX_STA&0x3f;
+				len = SerialRemoteHandleL(len1,USART_RX_BUF);
+				len1 =0;
+				memset(USART_RX_BUF,0,200);
+	//			RE485;
+				
+			//	printf("\r\n\r\n");//插入换行
+				USART_RX_STA=0;			  //清零 虚拟寄存器		  为一下次采集做准备
+			}else{
+				if(sendcount>500)//请求数据
+				{
+					sendcount = 0;
+					Send_Request(1,1);
+					timer0_counter=0;
+				}else{
+					sendcount ++;
+				}
+			}
+		}
+		if(Button_Page.page == 5 && (Test_Dispvalue.LoadV.Num < SaveSIM.NOMV.Num && Test_Dispvalue.RValue.Num > 2000))
+		{
+			Button_Page.page = 4;
+			Test_Dispvalue.liststep.Num = 0;
+			LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_BACK);
+			Disp_Button_List();
+		}
 		
 		if(Button_Page.page < 4)
 		{
@@ -1317,7 +1341,7 @@ void List_Process(void)
 			Disp_Testvalue(4);
 			if(listswitch == 1)
 			{
-				ListHandle();
+ 				ListHandle();
 				if(listswitch == 0)
 				{
 					Button_Page.page = 5;
@@ -1383,27 +1407,23 @@ void List_Process(void)
 								SaveSIM.StepMode = 0;
 							}break;
 							case 3:
-								SaveSIM.LoopTest = 0;
+								SaveSIM.listmode = 0;
 							break;					
 							default:
 								break;
 								
 						}
 					}else{
-						switch((Button_Page.index-5)%6)
+						if(Button_Page.index == 5)
 						{
-							case 0:
+							SaveSIM.ITEM[Test_Dispvalue.liststep.Num] = 0+buttonpage*3;
+							if(SaveSIM.ITEM[listNo] == 3)
 							{
-								SaveSIM.ITEM[listNo] = 0+buttonpage*3;
-								if(SaveSIM.ITEM[listNo] == 3)
-								{
-									Disp_Warning(1);
-									SaveSIM.TIME[listNo].Num = 3;
-								}else{
-									Disp_Warning(0);
-								}
-							}break;
-							
+								Disp_Warning(1);
+								SaveSIM.TIME[listNo].Num = 3;
+							}else{
+								Disp_Warning(0);
+							}
 						}
 					}
 					Savetoeeprom();
@@ -1411,6 +1431,10 @@ void List_Process(void)
 				case Key_F2:
 					if(Button_Page.page < 4)
 					{
+						if(Button_Page.index == 5)
+						{
+							SaveSIM.ITEM[Test_Dispvalue.liststep.Num] = 1+buttonpage*3;
+						}
 						if(Button_Page.index < 5)
 						{
 							switch(Button_Page.index)
@@ -1420,27 +1444,28 @@ void List_Process(void)
 									if(listswitch == 0)
 									SetSystemStatus(SYS_STATUS_LOAD);
 								}break;
-								case 2:
-								{
-									SaveSIM.StepMode = 1;
-								}break;
+//								case 2:
+//								{
+//									SaveSIM.StepMode = 1;
+//								}break;
 								case 3:
-									SaveSIM.LoopTest = 1;
+									SaveSIM.listmode = 1;
 								default:
 									break;
 
 							
 							}
-						}else{
-							switch((Button_Page.index-5)%6)
-							{
-								case 0:
-								{
-									SaveSIM.ITEM[listNo] = 1+buttonpage*3;
-								}break;
-								
-							}
 						}
+//						else{
+//							switch((Button_Page.index-5)%6)
+//							{
+//								case 0:
+//								{
+//									SaveSIM.ITEM[listNo] = 1+buttonpage*3;
+//								}break;
+//								
+//							}
+//						}
 					}else if(Button_Page.page == 4){
 						jumpflag = 1;
 					}else if(Button_Page.page > 5){
@@ -1475,14 +1500,18 @@ void List_Process(void)
 							
 							}
 						}else{
-							switch((Button_Page.index-5)%6)
+							if(Button_Page.index == 5)
 							{
-								case 0:
-								{
-									SaveSIM.ITEM[listNo] = 2+buttonpage*3;
-								}break;
-								
+								SaveSIM.ITEM[Test_Dispvalue.liststep.Num] = 2+buttonpage*3;
 							}
+//							switch((Button_Page.index-5)%6)
+//							{
+//								case 0:
+//								{
+//									SaveSIM.ITEM[listNo] = 2+buttonpage*3;
+//								}break;
+//								
+//							}
 						}
 					}else if(Button_Page.page == 4){
 						if(listswitch == 0)
@@ -1528,30 +1557,26 @@ void List_Process(void)
 							
 							}	
 						}else{
-							switch((Button_Page.index-5)%6)
+							if(Button_Page.index == 5)
 							{
-								case 0:
+								if(buttonpage == 0)
 								{
-									if(buttonpage == 0)
-									{
-										buttonpage = 1;
-									}else if(buttonpage == 1){
-										buttonpage = 0;
-									}
-								}break;
-								
+									buttonpage = 1;
+								}else if(buttonpage == 1){
+									buttonpage = 2;
+								}else if(buttonpage == 2){
+									buttonpage = 0;
+								}
 							}
+								
+	
 						}
 					}else if(Button_Page.page == 4){
 						if(listswitch == 0)
 						Button_Page.page = 1;
 						
 					}else if(Button_Page.page > 4){
-						Comp_flag = 0;
-						Comp_ledoff();
-						Button_Page.page = 4;
-						LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_MID);
-						Disp_Button_List();
+						List_Process();
 					}
 					
 					Savetoeeprom();
@@ -1561,7 +1586,8 @@ void List_Process(void)
 					{
 						Button_Page.page = 4;
 //						Send_Request(2,1);
-						LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_MID);
+						Test_Dispvalue.liststep.Num = 0;
+						LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_BACK);
 						Disp_Button_List();
 					}else if(Button_Page.page == 4){
 						
@@ -1570,7 +1596,7 @@ void List_Process(void)
 							Test_Dispvalue.liststep.Num = 0;
 							listswitch = 1;
 							mainswitch = 1;
-							startdelay = 100;
+							startdelay = 0;
 							Test_Dispvalue.LVRES = Test_Dispvalue.Vmvalue;
 							Test_Dispvalue.IRRES = Test_Dispvalue.Rmvalue;
 //							if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2)
@@ -1593,12 +1619,18 @@ void List_Process(void)
 						
 						}
 						Send_Request(5,mainswitch);
+					}else if(Button_Page.page > 4){
+						Comp_flag = 0;
+						Comp_ledoff();
+						Button_Page.page = 4;
+						LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_BACK);
+						Disp_Button_List();
 					}
 				break;
 				case Key_Disp:
 					if(listswitch == 0)
 					{
-						SetSystemStatus(SYS_STATUS_TEST);
+						SetSystemStatus(SYS_STATUS_LOAD);
 					}
 				break;
 				case Key_SETUP:
@@ -1611,102 +1643,130 @@ void List_Process(void)
 					
 				break;
 				case Key_LEFT:
-					if(Button_Page.index==0)
-					{
-						Button_Page.index=4;
-					}
-					else if(Button_Page.index<=4){
-//						if(Button_Page.index>2)
+//					if(Button_Page.index==0)
+//					{
+//						Button_Page.index=4;
+//					}
+//					else if(Button_Page.index<=4){
+////						if(Button_Page.index>2)
+////						{
+////							Button_Page.index-=2;
+////						}
+//					}else if(Button_Page.index>4){
+//						if(Button_Page.index<1)
 //						{
-//							Button_Page.index-=2;
+//							Button_Page.index = 5+SaveSIM.ListNum.Num*6-1;
 //						}
-					}else if(Button_Page.index>4){
-						if(Button_Page.index<1)
+//						else{
+//							Button_Page.index --;
+//						}
+//					}
+					if(Button_Page.index > 4)
+					{
+						if(Test_Dispvalue.liststep.Num > 0)
 						{
-							Button_Page.index = 5+SaveSIM.ListNum.Num*6-1;
+							Test_Dispvalue.liststep.Num --;
+							Button_Page.index = 5;
 						}
-						else{
-							Button_Page.index --;
+					}else{
+						if(Button_Page.index > 2)
+						{
+							Button_Page.index -= 2;
 						}
 					}
-					
 					
 				break;
 				case Key_RIGHT:
-					
-					if(Button_Page.index==0)
+					if(Button_Page.index > 4)
 					{
-						Button_Page.index=1;
-					}
-					else if(Button_Page.index<=4){
-						
-//						if(Button_Page.index<=2)
-//						{
-//							Button_Page.index+=2;
-//						}
-//						else{
-//							Button_Page.index-=2;
-//						}
-					}else if(Button_Page.index>4){
-						if(Button_Page.page < 2)
+						if(Test_Dispvalue.liststep.Num < SaveSIM.ListNum.Num - 1)
 						{
-							if(SaveSIM.ListNum.Num >= 5)
-							{
-								if(Button_Page.index>=34)
-								{
-									
-								}
-								else{
-									Button_Page.index ++;
-								}
-							}else{
-								if(Button_Page.index>5+SaveSIM.ListNum.Num*6-1)
-								{
-									
-								}
-								else{
-									Button_Page.index ++;
-								}
-							}
-						}else if(Button_Page.page >= 2 && Button_Page.page < 4){
-							if(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1)  >= 5)
-							{
-								if(Button_Page.index>=34)
-								{
-									
-								}
-								else{
-									Button_Page.index ++;
-								}
-							}else if(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1)  < 5){
-								if(Button_Page.index>5+(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1))*6-1)
-								{
-									
-								}
-								else{
-									Button_Page.index ++;
-								}
-							}
+							Test_Dispvalue.liststep.Num ++;
+							Button_Page.index = 5;
 						}
-						
+					}else{
+						if(Button_Page.index < 3)
+						{
+							Button_Page.index += 2;
+						}
 					}
+//					if(Button_Page.index==0)
+//					{
+//						Button_Page.index=1;
+//					}
+//					else if(Button_Page.index<=4){
+//						
+////						if(Button_Page.index<=2)
+////						{
+////							Button_Page.index+=2;
+////						}
+////						else{
+////							Button_Page.index-=2;
+////						}
+//					}else if(Button_Page.index>4){
+//						if(Button_Page.page < 2)
+//						{
+//							if(SaveSIM.ListNum.Num >= 5)
+//							{
+//								if(Button_Page.index>=34)
+//								{
+//									
+//								}
+//								else{
+//									Button_Page.index ++;
+//								}
+//							}else{
+//								if(Button_Page.index>5+SaveSIM.ListNum.Num*6-1)
+//								{
+//									
+//								}
+//								else{
+//									Button_Page.index ++;
+//								}
+//							}
+//						}else if(Button_Page.page >= 2 && Button_Page.page < 4){
+//							if(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1)  >= 5)
+//							{
+//								if(Button_Page.index>=34)
+//								{
+//									
+//								}
+//								else{
+//									Button_Page.index ++;
+//								}
+//							}else if(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1)  < 5){
+//								if(Button_Page.index>5+(SaveSIM.ListNum.Num - 5 * (Button_Page.page - 1))*6-1)
+//								{
+//									
+//								}
+//								else{
+//									Button_Page.index ++;
+//								}
+//							}
+//						}
+//						
+//					}
 						
 				break;
 				case Key_DOWN:
 					
 					if(Button_Page.index>4)
 					{
-						if(Button_Page.index>listdis-6-1)
+						if(Button_Page.index < listindex[SaveSIM.ITEM[Test_Dispvalue.liststep.Num]])
 						{
-							if(Button_Page.page < listpage)
-							{
-								Button_Page.page ++;
-								Button_Page.index=Button_Page.index-24;
-							}
-							
-						}else{
-							Button_Page.index += 6;
-						}						
+							Button_Page.index ++;
+						}
+//						if(Button_Page.index>listdis-6-1)
+//						{
+//							if(Button_Page.page < listpage)
+//							{
+//								Button_Page.page ++;
+//								Button_Page.index=Button_Page.index-24;
+//							}
+//							
+//						}else{
+//							Button_Page.index += 6;
+//						}						
 						
 					}
 					else{
@@ -1723,26 +1783,36 @@ void List_Process(void)
 					
 					if(Button_Page.index>4)
 					{
-						
-						if(Button_Page.index < 10)
+						if(Button_Page.index == 5)
 						{
-							if(Button_Page.page > 1)
-							{
-								Button_Page.page --;
-								Button_Page.index=Button_Page.index+24;
-							}else{
-								Button_Page.index = 2;
-							}
+							Button_Page.index = 2;
 						}else{
-							Button_Page.index -= 6;
-						}						
+							Button_Page.index --;
+						}
+						
+//						if(Button_Page.index < 10)
+//						{
+//							if(Button_Page.page > 1)
+//							{
+//								Button_Page.page --;
+//								Button_Page.index=Button_Page.index+24;
+//							}else{
+//								Button_Page.index = 2;
+//							}
+//						}else{
+//							Button_Page.index -= 6;
+//						}						
 						
 					}
 					else{
-						if(Button_Page.index == 0)
+//						if(Button_Page.index == 0)
+//						{
+//							Button_Page.index = 5+SaveSIM.ListNum.Num*6-1;
+//						}else{
+//							Button_Page.index--;
+//						}
+						if(Button_Page.index > 0)
 						{
-							Button_Page.index = 5+SaveSIM.ListNum.Num*6-1;
-						}else{
 							Button_Page.index--;
 						}
 					}
@@ -1789,94 +1859,175 @@ void List_Process(void)
 								SaveSIM.ListNum=Disp_Set_Step(&Coordinates);
 //								List_Process();
 							break;
-							case 3:
-								Coordinates.xpos=LIST2+88+32;
-								Coordinates.ypos=FIRSTLINE;
-								Coordinates.lenth=72;
-								SaveSIM.Loop=Disp_Set_Step(&Coordinates);
-//								List_Process();
-							break;
+//							case 3:
+//								Coordinates.xpos=LIST2+88+32;
+//								Coordinates.ypos=FIRSTLINE;
+//								Coordinates.lenth=72;
+//								SaveSIM.Loop=Disp_Set_Step(&Coordinates);
+////								List_Process();
+//							break;
 							case 4:
 								Coordinates.xpos=LIST2+88+32;;
 								Coordinates.ypos=FIRSTLINE+SPACE1;
 								Coordinates.lenth=85;
-								SaveSIM.LoopDelay=Disp_Set_DTime(&Coordinates);
+								SaveSIM.NOMV=Disp_Set_Num(&Coordinates);
 //								List_Process();
 							break;
-	//						case 2:
-	//							Coordinates.xpos=LIST1+88+16;
-	//							Coordinates.ypos=FIRSTLINE+SPACE1*1;
-	//							Coordinates.lenth=76;
-	//							SaveSIM.StepC=Disp_Set_C(&Coordinates);
-	//							Send_Request(10,1);
-	//							break;
-	//						case 3:
-	//							Coordinates.xpos=LIST1+88+16;
-	//							Coordinates.ypos=FIRSTLINE+SPACE1*2;
-	//							Coordinates.lenth=76;
-	//							SaveSIM.ThresholdV=Disp_Set_C(&Coordinates);
-	//							Send_Request(10,1);
-	//							break;
-	//						case 5:
-	//							Coordinates.xpos=LIST2+88+32;
-	//							Coordinates.ypos=FIRSTLINE+SPACE1;
-	//							Coordinates.lenth=76;
-	//							SaveSIM.StepT = Disp_Set_T(&Coordinates);
-	//							Send_Request(10,1);
-	//							break;
-	//						case 6:
-	//							Coordinates.xpos=LIST2+88+32;
-	//							Coordinates.ypos=FIRSTLINE+SPACE1*2;
-	//							Coordinates.lenth=76;
-	//							SaveSIM.LoadPT = Disp_Set_T(&Coordinates);
-	//							Send_Request(10,1);
-	//							break;
 							default:
 								break;					
 						
 						}
 					}else{
-						switch((Button_Page.index - 5)%6)
+						if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 0)//放电
 						{
-							case 1:
+							switch(Button_Page.index)
 							{
-								Coordinates.xpos=listcol[1]+3;
-								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
-								Coordinates.lenth=76;
-								SaveSIM.PARA1[listNo]= Disp_Set_Num(&Coordinates);
-							}break;
-							case 2:
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA2[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								case 7:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+5*22;
+									Coordinates.lenth=60;
+									SaveSIM.COFFV[Test_Dispvalue.liststep.Num]= Disp_Set_Num(&Coordinates);
+								}break;
+								case 8:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+6*22;
+									Coordinates.lenth=60;
+									SaveSIM.TIME[Test_Dispvalue.liststep.Num]= Disp_Set_LISTT(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
+						}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 1){//充电
+							switch(Button_Page.index)
 							{
-								Coordinates.xpos=listcol[2]+3;
-								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
-								Coordinates.lenth=76;
-								SaveSIM.PARA2[listNo]= Disp_Set_C(&Coordinates);
-							}break;
-							case 3:
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA1[Test_Dispvalue.liststep.Num]= Disp_Set_Num(&Coordinates);
+								}break;
+								case 7:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+5*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA2[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								case 8:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+6*22;
+									Coordinates.lenth=60;
+									SaveSIM.COFFC[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								case 9:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+7*22;
+									Coordinates.lenth=60;
+									SaveSIM.TIME[Test_Dispvalue.liststep.Num]= Disp_Set_LISTT(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
+						}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 2){//过流
+							switch(Button_Page.index)
 							{
-								Coordinates.xpos=listcol[3]+3;
-								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
-								Coordinates.lenth=76;
-								SaveSIM.COFFV[listNo]= Disp_Set_Num(&Coordinates);
-							}break;
-							case 4:
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA1[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								case 7:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+5*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA2[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
+						}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 3){//过充
+							switch(Button_Page.index)
 							{
-								Coordinates.xpos=listcol[4]+3;
-								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
-								Coordinates.lenth=76;
-								SaveSIM.COFFC[listNo]= Disp_Set_C(&Coordinates);
-							}break;
-							case 5:
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA1[Test_Dispvalue.liststep.Num]= Disp_Set_Num(&Coordinates);
+								}break;
+								case 7:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+5*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA2[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								case 8:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+6*22;
+									Coordinates.lenth=60;
+									SaveSIM.TIME[Test_Dispvalue.liststep.Num]= Disp_Set_LISTT(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
+						}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 4){//过放
+							switch(Button_Page.index)
 							{
-								Coordinates.xpos=listcol[5]+3;
-								Coordinates.ypos=listrow[Button_Page.index/6-1]+3;
-								Coordinates.lenth=76;
-								SaveSIM.TIME[listNo]= Disp_Set_T(&Coordinates);
-							}break;
-							
-							default:
-								break;	
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.PARA1[Test_Dispvalue.liststep.Num]= Disp_Set_C(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
+						}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 5){//NTC
+							switch(Button_Page.index)
+							{
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.TIME[Test_Dispvalue.liststep.Num]= Disp_Set_LISTT(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
+						}else if(SaveSIM.ITEM[Test_Dispvalue.liststep.Num] == 6){//静态
+							switch(Button_Page.index)
+							{
+								case 6:
+								{
+									Coordinates.xpos=100;
+									Coordinates.ypos=26+4*22;
+									Coordinates.lenth=60;
+									SaveSIM.TIME[Test_Dispvalue.liststep.Num]= Disp_Set_LISTT(&Coordinates);
+								}break;
+								default:
+									break;	
+							}
 						}
+
 					}
 					Savetoeeprom();
 				break;
@@ -2057,7 +2208,7 @@ void Comp_Process(void)
 				case Key_Disp:
 					if(mainswitch == 0)
 					{
-						SetSystemStatus(SYS_STATUS_TEST);
+						SetSystemStatus(SYS_STATUS_LOAD);
 					}
 				break;
 				case Key_SETUP:
@@ -2412,14 +2563,27 @@ void Test_Process(void)
 			&& ocfinish == 0 && mainswitch == 0)//开始测试条件判断
 			{
 				timecount ++;
-				if(timecount > 30*(2-SaveSIM.testmode))//快速和精准等待时间区分
+				if(SaveSIM.testmode == 1)//快速
 				{
-					Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
-					Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
-					Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
-					Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
-					mainswitch = 1;
-					Send_Request(3,mainswitch);
+					if(timecount > 5)//快速和精准等待时间区分
+					{
+						Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+						Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+						Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+						Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+						mainswitch = 1;
+						Send_Request(3,mainswitch);
+					}
+				}else if(SaveSIM.testmode == 0){//精准
+					if(timecount > 60)//快速和精准等待时间区分
+					{
+						Test_Dispvalue.LVRES = Test_Dispvalue.LoadV;
+						Test_Dispvalue.IRRES = Test_Dispvalue.RValue;
+						Test_Dispvalue.R1RES = Test_Dispvalue.R1Value;
+						Test_Dispvalue.R2RES = Test_Dispvalue.R2Value;
+						mainswitch = 1;
+						Send_Request(3,mainswitch);
+					}
 				}
 			}else{
 				timecount = 0;
@@ -2456,11 +2620,11 @@ void Test_Process(void)
 //				timer0_counter=0;
 //			}
 		}
-		if(mainswitch == 0 && timer2_counter > 500)
-		{
-//			Read_Temp();
-			timer2_counter = 0;
-		}
+//		if(mainswitch == 0 && timer2_counter > 500)
+//		{
+////			Read_Temp();
+//			timer2_counter = 0;
+//		}
 //		Uart_Process();
 //		Send_Uart3((uint8_t *)READDATA);
 		Colour.black=LCD_COLOR_TEST_MID;
@@ -3017,7 +3181,7 @@ void Setup_Process(void)
 				break;
 				case Key_Disp:
 						
-                        SetSystemStatus(SYS_STATUS_TEST);
+                        SetSystemStatus(SYS_STATUS_LOAD);
 				break;
 				case Key_SETUP:
 						
@@ -4483,7 +4647,7 @@ void Use_SysSetProcess(void)
 							SaveSIM.Comp=0;
 							break;
 						case 11:
-							SaveData.Sys_Setup.Bus_Mode=0;
+							SaveSIM.listdelay=0;
 							break;
 						case 12:
 							if(SaveData.Sys_Setup.GP_Addr<1)
@@ -4641,7 +4805,7 @@ void Use_SysSetProcess(void)
 							SaveSIM.Comp=1;
 							break;
 						case 11:
-							SaveData.Sys_Setup.Bus_Mode=1;
+							SaveSIM.listdelay=1;
 							break;
 						case 12:
 							if(SaveData.Sys_Setup.GP_Addr>99)
@@ -4829,11 +4993,11 @@ void Use_SysSetProcess(void)
 						Exit_correction();
 						INSTRUCT_TO_DEBUG
 						Exit_correction();
-						SetSystemStatus(SYS_STATUS_TEST);
+						SetSystemStatus(SYS_STATUS_LOAD);
 					
 					}
 					else if(Button_Page.page==0)
-						SetSystemStatus(SYS_STATUS_TEST);
+						SetSystemStatus(SYS_STATUS_LOAD);
 
 				break;
 				case Key_SETUP:					
@@ -4898,7 +5062,7 @@ void Use_SysSetProcess(void)
 					{
 						if(Button_Page.index>15)
 							Button_Page.index=0;
-						else if(Button_Page.index<10)
+						else if(Button_Page.index<11)
 							Button_Page.index++;
 						else if(Button_Page.index==14)
 							Button_Page.index++;
@@ -4929,14 +5093,14 @@ void Use_SysSetProcess(void)
 					{
 						if(Button_Page.index<1)
 							Button_Page.index=16;
-						else if(Button_Page.index<11)
+						else if(Button_Page.index<12)
 							Button_Page.index--;
 						else if(Button_Page.index==16)
 							Button_Page.index--;
 						else if(Button_Page.index==15)
 							Button_Page.index--;
 						else if(Button_Page.index==14)
-							Button_Page.index=10;
+							Button_Page.index=11;
 				    }
 					else if(Button_Page.page==1)
 					{
@@ -5369,7 +5533,7 @@ void Fac_DebugProcess(void)
 				break;
 				case Key_Disp:
 					Send_Request(2,0);
-					SetSystemStatus(SYS_STATUS_TEST);
+					SetSystemStatus(SYS_STATUS_LOAD);
 				break;
 				case Key_SETUP:
 					if(Button_Page.index==0)
@@ -7395,6 +7559,32 @@ Sort_TypeDef Disp_Set_NTCR(Disp_Coordinates_Typedef *Coordinates)
 	Sort_num=Disp_NumKeyboard_NTC(Coordinates);
 //	Sort_num1=Time_Set_Cov(&Sort_num);
 	Sort_num1.Num = Sort_num.Num;
+	if(Sort_num1.Num>2000)
+	{
+		Sort_num1.Num = 2000;
+	}
+	if(Sort_num1.Updata_flag==0)
+	{
+		Sort_num1.Dot=0;
+		Sort_num1.Num=0;
+		Sort_num1.Unit=0;
+	
+	}
+//	if(Sort_num1.Num>200)
+//	{
+//		Sort_num1.Num = 200;
+//	}
+		
+	return Sort_num1;
+
+}
+Sort_TypeDef Disp_Set_LISTT(Disp_Coordinates_Typedef *Coordinates)
+{
+	Sort_TypeDef Sort_num,Sort_num1;
+	Disp_button_Num_ms();
+	Sort_num=Disp_NumKeyboard_NTC(Coordinates);
+//	Sort_num1=Time_Set_Cov(&Sort_num);
+	Sort_num1.Num = Sort_num.Num;
 	if(Sort_num1.Num>1000)
 	{
 		Sort_num1.Num = 1000;
@@ -7414,7 +7604,6 @@ Sort_TypeDef Disp_Set_NTCR(Disp_Coordinates_Typedef *Coordinates)
 	return Sort_num1;
 
 }
-
 Sort_TypeDef Disp_Set_Step(Disp_Coordinates_Typedef *Coordinates)
 {
 	Sort_TypeDef Sort_num,Sort_num1;

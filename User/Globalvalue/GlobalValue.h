@@ -161,6 +161,9 @@
 
 //显示刷新滤波次数
 #define DISP_FILTER		20
+#define STARTDELAY		200
+#define LISTDELAY		0xfffff
+#define LISTDELAY1		0xffffff
 //==========================================================
 //标题长度
 #define TITLE_LEN_MAX		(8)
@@ -585,7 +588,9 @@ typedef struct
 	Sort_TypeDef STLOW;
 	uint8_t Rraly;
 	uint8_t Comp;
-	Sort_TypeDef LoopDelay;//循环次数
+	Sort_TypeDef NOMV;//标称电压
+	uint8_t listmode;
+	uint8_t listdelay;
 }SaveSet;
 
 extern SaveSet SaveSIM;
@@ -732,6 +737,7 @@ extern uint8_t ocfinish;
 extern float bc_raw;
 extern uint32_t cdctime;
 extern uint8_t jumpflag;
+extern uint8_t listcap;
 //extern  uint16_t Voltage;//测试电压
 //extern  uint16_t Current;//测试电流
 //extern  uint16_t Resistance,xxxx;//	测试电阻
