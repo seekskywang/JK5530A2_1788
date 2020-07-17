@@ -142,7 +142,7 @@ int main(void)
 	GPIO_Led_Configuration();
 //    _printf("\r\n/* * * * * * * * LCD TouchPanel example program * * * * * * * */\r\n");
 //    _printf("CoreClock: %d\n",SystemCoreClock);  
-//	Delay(200);
+	Delay(200);
     SDRAM_Init();
 	/*Disable LCD controller*/
 	GLCD_Ctrl (FALSE);
