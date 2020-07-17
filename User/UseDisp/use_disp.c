@@ -4453,7 +4453,7 @@ void Disp_List_Res(Button_Page_Typedef* Button_Page)
 //							Hex_Format(Test_Dispvalue.RES2[(i-5)/5 + (Button_Page->page -5)*5].Num,0,4,0);
 //							WriteString_16(rescol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);						
 //						}
-						Hex_Format(Test_Dispvalue.RES4[(i-5)/5 + (Button_Page->page -5)*5].Num,0,6,0);
+						Hex_Format(Test_Dispvalue.RES3[(i-5)/5 + (Button_Page->page -5)*5].Num,0,6,0);
 						WriteString_16(rescol[i%5]+3,listrow[i/5-1]+3, DispBuf,  0);
 		
 					}else{
@@ -9438,8 +9438,8 @@ void Comp_Hanlde(u8 item)
 		}break;
 		case 2://过流分选
 		{
-			if(Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num].Num > SaveSIM.RHIGH.Num 
-			|| Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num].Num < SaveSIM.RLOW.Num
+			if(Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num].Num > SaveSIM.STHIGH.Num 
+			|| Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num].Num < SaveSIM.STLOW.Num
 			|| Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num].Num > SaveSIM.OCHIGH.Num
 			|| Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num].Num < SaveSIM.OCLOW.Num)
 			{
@@ -9612,8 +9612,8 @@ void ListHandle(void)
 			Send_Request(5,mainswitch);
 			Test_Dispvalue.RES1[Test_Dispvalue.liststep.Num] = Test_Dispvalue.LVRES;
 			Test_Dispvalue.RES2[Test_Dispvalue.liststep.Num] = Test_Dispvalue.OCValue;
-			Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num] = Test_Dispvalue.IRRES;
-			Test_Dispvalue.RES4[Test_Dispvalue.liststep.Num] = Test_Dispvalue.ShortT;
+			Test_Dispvalue.RES3[Test_Dispvalue.liststep.Num] = Test_Dispvalue.ShortT;
+//			Test_Dispvalue.RES4[Test_Dispvalue.liststep.Num] = Test_Dispvalue.ShortT;
 			Comp_Hanlde(2);
 			if(Test_Dispvalue.liststep.Num + 1 < SaveSIM.ListNum.Num)
 			{

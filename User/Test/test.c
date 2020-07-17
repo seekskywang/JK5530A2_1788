@@ -1310,6 +1310,8 @@ void List_Process(void)
 		}
 		if(Button_Page.page == 5 && (Test_Dispvalue.LoadV.Num < SaveSIM.NOMV.Num && Test_Dispvalue.RValue.Num > 2000))
 		{
+			Comp_flag = 0;
+			Comp_ledoff();
 			Button_Page.page = 4;
 			Test_Dispvalue.liststep.Num = 0;
 			LCD_DrawRect(0,70,479,205,LCD_COLOR_TEST_BACK);
@@ -1630,12 +1632,16 @@ void List_Process(void)
 				case Key_Disp:
 					if(listswitch == 0)
 					{
+						Comp_flag = 0;
+						Comp_ledoff();
 						SetSystemStatus(SYS_STATUS_LOAD);
 					}
 				break;
 				case Key_SETUP:
 					if(listswitch == 0)
 					{
+						Comp_flag = 0;
+						Comp_ledoff();
 						SetSystemStatus(SYS_STATUS_COMP);
 					}
 				break;
